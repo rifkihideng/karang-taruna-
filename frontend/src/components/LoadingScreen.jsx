@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 
 // Layar loading ringan: logo + spinner. Ditampilkan sesaat saat aplikasi
 // pertama kali dimuat, lalu memudar dengan halus.
-export default function LoadingScreen({ minDuration = 1200 }) {
+export default function LoadingScreen({ minDuration = 2500 }) {
   const [phase, setPhase] = useState('visible'); // visible | fading | hidden
 
   useEffect(() => {
@@ -34,7 +34,12 @@ export default function LoadingScreen({ minDuration = 1200 }) {
       <p className="animate-fade-in mt-6 text-lg font-bold text-gray-900 dark:text-white">
         Karang Taruna <span className="text-blue-600 dark:text-blue-400">RT 02</span>
       </p>
-      <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">Memuat...</p>
+      <p className="mt-2 text-sm font-medium tracking-wide text-gray-600 dark:text-slate-300">
+        Sehat, Rukun, Berdaya Saing
+      </p>
+      <p className="mt-8 text-sm text-gray-500 dark:text-slate-400">
+        Memuat<span className="animate-pulse">...</span>
+      </p>
     </div>
   );
 }
