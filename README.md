@@ -98,6 +98,10 @@ Yang sudah diterapkan di backend:
 - **Validasi input** — memakai `express-validator` (panjang maksimal, format email, tipe data).
 - **Query parameterized** — aman dari SQL injection.
 - **Error handler** — tidak membocorkan stack trace.
+- **X-Powered-By dimatikan** — versi Express tidak terekspos.
+
+> **Produksi (di belakang reverse proxy):** set `TRUST_PROXY=1` di `.env`
+> agar rate limiter membaca IP asli pengguna, bukan IP proxy.
 
 ## Catatan Keamanan
 

@@ -18,6 +18,15 @@ const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:5173')
 
 const app = express();
 
+// Hilangkan header X-Powered-By agar versi Express tidak terbaca.
+app.disable('x-powered-by');
+
+// Aktifkan saat berjalan di belakang reverse proxy (Render/Railway) dengan
+// mengisi TRUST_PROXY=1, agar rate limiter membaca IP asli pengguna.
+if (process.env.TRUST_PROXY === '1' || process.env.TRUST_PROXY === 'true') {
+  app.set('trust proxy', 1);
+}
+
 app.use(helmet());
 app.use(cors({ origin: allowedOrigins }));
 app.use(express.json());
@@ -52,8 +61,17 @@ app.use((err, req, res, next) => {
   if (err.type === 'entity.parse.failed') {
     return res.status(400).json({ error: 'Format JSON pada permintaan tidak valid' });
   }
-  console.error(err);
-  res.status(err.status || err.statusCode || 500).json({ error: 'Terjadi kesalahan pada server' });
+
+  const status = err.status || err.statusCode || 500;
+  // Log ringkas tanpa membocorkan detail sensitif; stack hanya di development.
+  console.error(
+    `[${new Date().toISOString()}] ${req.method} ${req.originalUrl} -> ${status}: ${err.message || 'Unknown error'}`
+  );
+  if (process.env.NODE_ENV === 'development') {
+    console.error(err.stack);
+  }
+
+  res.status(status).json({ error: 'Terjadi kesalahan pada server' });
 });
 
 export default app;

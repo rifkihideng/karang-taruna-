@@ -1,12 +1,18 @@
 import { Router } from 'express';
 import { db } from '../db.js';
+import { getPagination } from '../utils/pagination.js';
 
 const router = Router();
 
 // GET /api/berita
 router.get('/', async (req, res, next) => {
   try {
-    const { rows } = await db.execute('SELECT * FROM berita ORDER BY tanggal DESC');
+    const pagination = getPagination(req);
+    const sql = pagination
+      ? 'SELECT * FROM berita ORDER BY tanggal DESC LIMIT ? OFFSET ?'
+      : 'SELECT * FROM berita ORDER BY tanggal DESC';
+    const args = pagination ? [pagination.limit, pagination.offset] : [];
+    const { rows } = await db.execute(sql, args);
     res.json({ data: rows });
   } catch (err) {
     next(err);

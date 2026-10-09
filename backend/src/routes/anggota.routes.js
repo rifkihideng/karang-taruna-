@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { body, validationResult } from 'express-validator';
 import { db } from '../db.js';
 import { formLimiter } from '../middleware/rateLimit.js';
+import { getPagination } from '../utils/pagination.js';
 
 const router = Router();
 
@@ -40,7 +41,12 @@ const validateAnggota = [
 // GET /api/anggota
 router.get('/', async (req, res, next) => {
   try {
-    const { rows } = await db.execute('SELECT * FROM anggota ORDER BY id');
+    const pagination = getPagination(req);
+    const sql = pagination
+      ? 'SELECT * FROM anggota ORDER BY id LIMIT ? OFFSET ?'
+      : 'SELECT * FROM anggota ORDER BY id';
+    const args = pagination ? [pagination.limit, pagination.offset] : [];
+    const { rows } = await db.execute(sql, args);
     res.json({ data: rows });
   } catch (err) {
     next(err);
