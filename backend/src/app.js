@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 
 import beritaRoutes from './routes/berita.routes.js';
 import kegiatanRoutes from './routes/kegiatan.routes.js';
@@ -8,11 +9,21 @@ import galeriRoutes from './routes/galeri.routes.js';
 import statsRoutes from './routes/stats.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import kontakRoutes from './routes/kontak.routes.js';
+import { apiLimiter } from './middleware/rateLimit.js';
+
+const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:5173')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
 const app = express();
 
-app.use(cors());
+app.use(helmet());
+app.use(cors({ origin: allowedOrigins }));
 app.use(express.json());
+
+// Batasi seluruh endpoint API
+app.use('/api', apiLimiter);
 
 // Health check
 app.get('/api/health', (req, res) => {

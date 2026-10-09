@@ -87,6 +87,18 @@ diteruskan (proxy) ke backend di `http://localhost:5000`.
 - [ ] Upload foto galeri (mis. Multer / Cloudinary)
 - [ ] Deploy: frontend ke Vercel/Netlify, backend ke VPS/Railway/Render
 
+## Keamanan
+
+Yang sudah diterapkan di backend:
+
+- **Helmet** — security headers (X-Content-Type-Options, dll).
+- **CORS dibatasi** — hanya origin di `CORS_ORIGIN` yang diizinkan (default `http://localhost:5173`).
+- **Rate limiting** — seluruh `/api` dibatasi 300 request/15 menit, dan form publik
+  (pendaftaran & kontak) dibatasi 10 pengiriman/15 menit per IP.
+- **Validasi input** — memakai `express-validator` (panjang maksimal, format email, tipe data).
+- **Query parameterized** — aman dari SQL injection.
+- **Error handler** — tidak membocorkan stack trace.
+
 ## Catatan Keamanan
 
 Hasil `npm audit` di backend menunjukkan 3 kerentanan **hanya pada dependency
