@@ -90,10 +90,26 @@ mendukung pagination via query `?limit=` dan `?offset=` (maks. 200 per halaman).
 
 - [x] Ganti data contoh (`seed.js`) dengan database — memakai Turso (libSQL)
 - [x] Form kontak tersambung ke backend (POST `/api/kontak`)
-- [ ] Implementasi login admin (JWT + bcrypt) & panel admin untuk kelola konten
+- [x] Implementasi login admin (JWT + bcrypt) & panel admin untuk kelola konten (basic development flow)
 - [ ] Upload foto galeri (mis. Multer / Cloudinary)
 - [ ] Deploy: frontend ke Vercel/Netlify, backend ke VPS/Railway/Render
 
+## Admin (development)
+
+Backend sekarang menambahkan tabel `admin_users` dan menyertakan satu akun admin saat pertama kali dijalankan (seed). Pengaturan terkait:
+
+- ADMIN_PASSWORD (default `admin123`) — password awal (digunakan hanya saat seed).
+- ADMIN_SALT_ROUNDS (default `10`) — salt rounds untuk bcrypt.
+- ADMIN_PEPPER (opsional) — nilai 'pepper' yang akan ditambahkan ke password sebelum hashing; simpan hanya di environment.
+
+Setelah seed, password disimpan sebagai hash bcrypt di database lokal (`backend/data/karang-taruna.db`). Untuk mengubah password di development, ubah `ADMIN_PASSWORD` lalu hapus/mengosongkan tabel `admin_users` atau hapus file DB lokal lalu restart server agar seed dijalankan ulang.
+
+Untuk produksi: buat mekanisme reset password yang aman, gunakan HTTPS, simpan hanya hash (bcrypt) dan jangan menyimpan password plaintext di repository atau logs.
+
+### Agenda dan pendaftar
+
+Halaman `/admin` menyediakan CRUD agenda. Penambahan, perubahan, dan penghapusan agenda serta endpoint daftar pendaftar baru wajib memakai token admin dari `/api/auth/login`.
+Data pendaftar baru tersedia melalui `GET /api/anggota/admin/pendaftar`; endpoint publik anggota hanya mengembalikan nama, jabatan, dan angkatan, bukan alamat atau kontak.
 ## Keamanan
 
 Yang sudah diterapkan di backend:

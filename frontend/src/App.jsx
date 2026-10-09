@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense, lazy } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -15,6 +15,8 @@ import Daftar from './pages/Daftar';
 import Kontak from './pages/Kontak';
 import TabsDemo from './pages/TabsDemo';
 import NotFound from './pages/NotFound';
+
+const Admin = lazy(() => import('./pages/Admin.jsx'));
 
 export default function App() {
   const location = useLocation();
@@ -46,6 +48,7 @@ export default function App() {
             <Route path="/galeri" element={<Galeri />} />
             <Route path="/daftar" element={<Daftar />} />
             <Route path="/kontak" element={<Kontak />} />
+            <Route path="/admin" element={<Suspense fallback={<div className="p-6">Memuat admin…</div>}><Admin /></Suspense>} />
             <Route path="/demo" element={<TabsDemo />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

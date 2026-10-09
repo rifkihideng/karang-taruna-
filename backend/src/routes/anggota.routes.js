@@ -3,8 +3,24 @@ import { body, validationResult } from 'express-validator';
 import { db } from '../db.js';
 import { formLimiter } from '../middleware/rateLimit.js';
 import { getPagination } from '../utils/pagination.js';
+import { requireAdmin } from '../middleware/requireAdmin.js';
 
 const router = Router();
+
+// Data pendaftar (termasuk kontak dan alamat) hanya untuk admin.
+router.get('/admin/pendaftar', requireAdmin, async (req, res, next) => {
+  try {
+    const { rows } = await db.execute(
+      `SELECT id, nama, alamat, kontak, minat, status, created_at
+       FROM anggota
+       WHERE created_at IS NOT NULL
+       ORDER BY created_at DESC, id DESC`
+    );
+    res.json({ data: rows });
+  } catch (err) {
+    next(err);
+  }
+});
 
 const validateAnggota = [
   body('nama')
@@ -43,8 +59,8 @@ router.get('/', async (req, res, next) => {
   try {
     const pagination = getPagination(req);
     const sql = pagination
-      ? 'SELECT * FROM anggota ORDER BY id LIMIT ? OFFSET ?'
-      : 'SELECT * FROM anggota ORDER BY id';
+      ? 'SELECT id, nama, jabatan, angkatan FROM anggota ORDER BY id LIMIT ? OFFSET ?'
+      : 'SELECT id, nama, jabatan, angkatan FROM anggota ORDER BY id';
     const args = pagination ? [pagination.limit, pagination.offset] : [];
     const { rows } = await db.execute(sql, args);
     res.json({ data: rows });
@@ -61,7 +77,10 @@ router.get('/:id', async (req, res, next) => {
       return res.status(400).json({ error: 'ID anggota tidak valid' });
     }
 
-    const { rows } = await db.execute('SELECT * FROM anggota WHERE id = ?', [id]);
+    const { rows } = await db.execute(
+      'SELECT id, nama, jabatan, angkatan FROM anggota WHERE id = ?',
+      [id]
+    );
     const item = rows[0];
     if (!item) {
       return res.status(404).json({ error: 'Anggota tidak ditemukan' });
@@ -83,8 +102,8 @@ router.post('/', formLimiter, validateAnggota, async (req, res, next) => {
     const { nama, alamat, kontak, minat } = req.body;
 
     const result = await db.execute(
-      `INSERT INTO anggota (nama, alamat, kontak, minat, jabatan, angkatan, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO anggota (nama, alamat, kontak, minat, jabatan, angkatan, status, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
       [
         nama.trim(),
         (alamat || '').trim(),
@@ -93,6 +112,7 @@ router.post('/', formLimiter, validateAnggota, async (req, res, next) => {
         'Anggota',
         String(new Date().getFullYear()),
         'pending',
+        new Date().toISOString(),
       ]
     );
 

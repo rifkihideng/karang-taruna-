@@ -1,23 +1,48 @@
 const BASE = '/api';
 
-export async function fetchData(path) {
-  const res = await fetch(`${BASE}${path}`);
+function requestHeaders(headers = {}) {
+  const token = localStorage.getItem('adminToken');
+  return {
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...headers,
+  };
+}
+
+async function request(path, options = {}) {
+  const res = await fetch(`${BASE}${path}`, {
+    ...options,
+    headers: requestHeaders(options.headers),
+  });
+  const json = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error(`Gagal memuat data (status ${res.status})`);
+    const error = new Error(json.error || `Permintaan gagal (status ${res.status})`);
+    error.status = res.status;
+    throw error;
   }
-  const json = await res.json();
+  return json;
+}
+
+export async function fetchData(path) {
+  const json = await request(path);
   return json.data;
 }
 
 export async function postData(path, body) {
-  const res = await fetch(`${BASE}${path}`, {
+  return request(path, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
-  const json = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new Error(json.error || `Gagal (status ${res.status})`);
-  }
-  return json;
+}
+
+export async function putData(path, body) {
+  return request(path, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+}
+
+export async function deleteData(path) {
+  return request(path, { method: 'DELETE' });
 }
