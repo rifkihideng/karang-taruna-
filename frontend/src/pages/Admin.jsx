@@ -9,6 +9,15 @@ const emptyAgenda = {
   status: 'terjadwal',
 };
 
+const emptyBerita = {
+  judul: '',
+  kategori: '',
+  tanggal: '',
+  ringkasan: '',
+  isi: '',
+  gambar: '',
+};
+
 const inputClass =
   'mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-white';
 
@@ -25,26 +34,31 @@ export default function Admin() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [savingAgenda, setSavingAgenda] = useState(false);
+  const [savingBerita, setSavingBerita] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [stats, setStats] = useState(null);
   const [kegiatan, setKegiatan] = useState([]);
+  const [berita, setBerita] = useState([]);
   const [pendaftar, setPendaftar] = useState([]);
   const [agendaForm, setAgendaForm] = useState(emptyAgenda);
+  const [beritaForm, setBeritaForm] = useState(emptyBerita);
   const [editingId, setEditingId] = useState(null);
 
   const loadData = useCallback(async () => {
-    const [statsData, kegiatanData, pendaftarData] = await Promise.all([
+    const [statsData, kegiatanData, beritaData, pendaftarData] = await Promise.all([
       fetchData('/stats'),
       fetchData('/kegiatan'),
+      fetchData('/berita'),
       fetchData('/anggota/admin/pendaftar'),
     ]);
-    return { statsData, kegiatanData, pendaftarData };
+    return { statsData, kegiatanData, beritaData, pendaftarData };
   }, []);
 
-  const applyDashboardData = useCallback(({ statsData, kegiatanData, pendaftarData }) => {
+  const applyDashboardData = useCallback(({ statsData, kegiatanData, beritaData, pendaftarData }) => {
     setStats(statsData);
     setKegiatan(kegiatanData);
+    setBerita(beritaData);
     setPendaftar(pendaftarData);
   }, []);
 
@@ -90,6 +104,7 @@ export default function Admin() {
     setToken(null);
     setStats(null);
     setKegiatan([]);
+    setBerita([]);
     setPendaftar([]);
     setAgendaForm(emptyAgenda);
     setEditingId(null);
@@ -148,6 +163,23 @@ export default function Admin() {
     }
   }
 
+  async function saveBerita(event) {
+    event.preventDefault();
+    setSavingBerita(true);
+    setError('');
+    setNotice('');
+    try {
+      await postData('/berita', beritaForm);
+      setBeritaForm(emptyBerita);
+      setNotice('Berita berhasil ditambahkan.');
+      applyDashboardData(await loadData());
+    } catch (err) {
+      setError(err.message || 'Gagal menambahkan berita');
+    } finally {
+      setSavingBerita(false);
+    }
+  }
+
   async function removeAgenda(item) {
     if (!window.confirm(`Hapus agenda "${item.nama}"?`)) return;
     setError('');
@@ -158,6 +190,19 @@ export default function Admin() {
       setNotice('Agenda berhasil dihapus.');
     } catch (err) {
       setError(err.message || 'Gagal menghapus agenda');
+    }
+  }
+
+  async function removeBerita(item) {
+    if (!window.confirm(`Hapus berita "${item.judul}"?`)) return;
+    setError('');
+    setNotice('');
+    try {
+      await deleteData(`/berita/${item.id}`);
+      setBerita((items) => items.filter((berita) => berita.id !== item.id));
+      setNotice('Berita berhasil dihapus.');
+    } catch (err) {
+      setError(err.message || 'Gagal menghapus berita');
     }
   }
 
@@ -230,10 +275,11 @@ export default function Admin() {
       {error && <p role="alert" className="mt-5 rounded-xl bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">{error}</p>}
       {notice && <p role="status" className="mt-5 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300">{notice}</p>}
 
-      <section className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-3">
+      <section className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
           ['Anggota', stats?.anggota],
           ['Kegiatan', stats?.kegiatan],
+          ['Berita', stats?.berita],
           ['Galeri', stats?.galeri],
         ].map(([label, value]) => (
           <div key={label} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">
@@ -362,6 +408,119 @@ export default function Admin() {
                       Hapus
                     </button>
                   </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="mt-8 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+        <div className="h-fit rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800 sm:p-6">
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white">Tambah berita</h2>
+          <form onSubmit={saveBerita} className="mt-4 space-y-4">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-200">
+              Judul berita
+              <input
+                required
+                maxLength={200}
+                value={beritaForm.judul}
+                onChange={(event) => setBeritaForm({ ...beritaForm, judul: event.target.value })}
+                className={inputClass}
+              />
+            </label>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-200">
+                Kategori
+                <input
+                  required
+                  maxLength={100}
+                  placeholder="Kegiatan Sosial"
+                  value={beritaForm.kategori}
+                  onChange={(event) => setBeritaForm({ ...beritaForm, kategori: event.target.value })}
+                  className={inputClass}
+                />
+              </label>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-200">
+                Tanggal
+                <input
+                  type="date"
+                  required
+                  value={beritaForm.tanggal}
+                  onChange={(event) => setBeritaForm({ ...beritaForm, tanggal: event.target.value })}
+                  className={inputClass}
+                />
+              </label>
+            </div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-200">
+              Ringkasan
+              <textarea
+                required
+                maxLength={500}
+                rows={2}
+                value={beritaForm.ringkasan}
+                onChange={(event) => setBeritaForm({ ...beritaForm, ringkasan: event.target.value })}
+                className={inputClass}
+              />
+            </label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-200">
+              Isi berita
+              <textarea
+                required
+                rows={4}
+                value={beritaForm.isi}
+                onChange={(event) => setBeritaForm({ ...beritaForm, isi: event.target.value })}
+                className={inputClass}
+              />
+            </label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-200">
+              URL gambar (opsional)
+              <input
+                type="url"
+                value={beritaForm.gambar}
+                onChange={(event) => setBeritaForm({ ...beritaForm, gambar: event.target.value })}
+                className={inputClass}
+              />
+            </label>
+            <button
+              type="submit"
+              disabled={savingBerita}
+              className="rounded-xl bg-blue-600 px-4 py-2.5 font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60"
+            >
+              {savingBerita ? 'Menyimpan...' : 'Tambah berita'}
+            </button>
+          </form>
+        </div>
+
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800 sm:p-6">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white">Kelola berita</h2>
+            <span className="rounded-full bg-blue-50 px-3 py-1 text-sm font-semibold text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">
+              {berita.length} berita
+            </span>
+          </div>
+          <div className="mt-4 space-y-3">
+            {berita.length === 0 ? (
+              <p className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500 dark:bg-slate-900 dark:text-slate-400">
+                Belum ada berita.
+              </p>
+            ) : berita.map((item) => (
+              <article key={item.id} className="rounded-xl border border-slate-200 p-4 dark:border-slate-700">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <span className="text-xs font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-400">
+                      {item.kategori || 'Umum'}
+                    </span>
+                    <h3 className="mt-1 font-semibold text-slate-900 dark:text-white">{item.judul}</h3>
+                    <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{formatDate(item.tanggal)}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeBerita(item)}
+                    className="rounded-lg border border-red-200 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 dark:border-red-900 dark:text-red-300 dark:hover:bg-red-950/40"
+                  >
+                    Hapus
+                  </button>
                 </div>
               </article>
             ))}

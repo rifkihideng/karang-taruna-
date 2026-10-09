@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createClient } from '@libsql/client';
+import bcrypt from 'bcryptjs';
 import { berita, kegiatan, anggota, galeri } from './data/seed.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -18,19 +19,21 @@ const hasRemoteTursoConfig = Boolean(
 
 // Turso (libSQL) database. Jika konfigurasi remote kosong atau placeholder,
 // otomatis memakai database SQLite lokal di `data/karang-taruna.db` untuk development.
-function resolveUrl() {
-  if (hasRemoteTursoConfig) return tursoUrl;
-
+function localDbPath() {
   const dbPath = path.join(__dirname, '..', 'data', 'karang-taruna.db');
   fs.mkdirSync(path.dirname(dbPath), { recursive: true });
-  return `file:${dbPath}`;
+  return dbPath;
 }
 
-export const db = hasRemoteTursoConfig
-  ? createClient({ url: resolveUrl(), authToken: tursoToken })
-  : createClient({ url: resolveUrl() });
+function createRemoteClient() {
+  return createClient({ url: tursoUrl, authToken: tursoToken });
+}
 
-import bcrypt from 'bcryptjs';
+function createLocalClient() {
+  return createClient({ url: `file:${localDbPath()}` });
+}
+
+export let db = hasRemoteTursoConfig ? createRemoteClient() : createLocalClient();
 
 const DDL = [
   `CREATE TABLE IF NOT EXISTS berita (
@@ -140,6 +143,18 @@ async function seedIfEmpty() {
 }
 
 export async function initDb() {
+  // Jika Turso remote tidak terjangkau saat server mulai, otomatis beralih
+  // ke database SQLite lokal supaya website tetap bisa berjalan.
+  if (hasRemoteTursoConfig) {
+    try {
+      await db.execute('SELECT 1');
+      console.log('✅ Terhubung ke database Turso');
+    } catch (err) {
+      console.warn(`⚠️ Turso tidak terjangkau (${err.message || err}). Menggunakan SQLite lokal.`);
+      db = createLocalClient();
+    }
+  }
+
   for (const statement of DDL) {
     await db.execute(statement);
   }
