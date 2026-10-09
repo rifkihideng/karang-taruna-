@@ -72,7 +72,7 @@ export const anggota = [
   { id: 24, nama: 'Tegar', jabatan: 'Humas', angkatan: '2024' },
   { id: 25, nama: 'Ali', jabatan: 'Rohani', angkatan: '2024' },
   { id: 26, nama: 'Faik', jabatan: 'Rohani', angkatan: '2024' },
-  { id: 27, nama: 'Ibnu', jabatan: 'PDD', angkatan: '2024' },
+  { id: 27, nama: 'Ibnu', jabatan: 'Rohani', angkatan: '2024' },
   { id: 28, nama: 'Miko', jabatan: 'PDD', angkatan: '2024' },
   { id: 29, nama: 'Ipang', jabatan: 'PDD', angkatan: '2024' },
   { id: 30, nama: 'Icang', jabatan: 'Olahraga', angkatan: '2024' },
