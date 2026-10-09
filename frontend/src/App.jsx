@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import LoadingScreen from './components/LoadingScreen';
 import Beranda from './pages/Beranda';
 import Profil from './pages/Profil';
 import Struktur from './pages/Struktur';
@@ -30,6 +31,7 @@ export default function App() {
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50 text-gray-900 dark:bg-slate-900 dark:text-slate-100">
+      <LoadingScreen />
       <Navbar dark={dark} onToggleDark={() => setDark((v) => !v)} />
       <main className="flex-1">
         <div key={location.pathname} className="animate-fade-in">
