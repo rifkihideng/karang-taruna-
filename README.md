@@ -9,14 +9,16 @@ karang-taruna/
 ├── backend/     # API Express
 │   ├── server.js
 │   └── src/
-│       ├── app.js              # Setup Express, CORS, routing
+│       ├── app.js              # Setup Express, CORS, routing, error handler
 │       ├── db.js               # Koneksi Turso (libSQL) + skema + seeding
+│       ├── middleware/         # Rate limiter
+│       ├── utils/              # Helper pagination
 │       ├── routes/             # Endpoint API
 │       └── data/seed.js        # Data awal untuk seeding database
 └── frontend/    # React + Vite + Tailwind
     └── src/
-        ├── components/         # Navbar, Footer
-        ├── pages/              # Beranda, Profil, Berita, Agenda, Galeri, Kontak
+        ├── components/         # Navbar, Footer, Skeleton, CountUp
+        ├── pages/              # Beranda, Profil, Struktur, Agenda, Galeri, Daftar, Kontak
         ├── hooks/useFetch.js   # Hook ambil data dari API
         └── lib/                # Helper API & format tanggal
 ```
@@ -68,15 +70,18 @@ diteruskan (proxy) ke backend di `http://localhost:5000`.
 | POST   | `/api/kontak`    | Simpan pesan form kontak  |
 | POST   | `/api/auth/login`| Login admin (TODO)        |
 
+Endpoint list (`/api/berita`, `/api/kegiatan`, `/api/anggota`, `/api/galeri`)
+mendukung pagination via query `?limit=` dan `?offset=` (maks. 200 per halaman).
+
 ## Fitur Frontend
 
-- Beranda (hero, statistik, berita terbaru, agenda terdekat)
-- Detail berita (`/berita/:id`) & pencarian berita
-- Agenda kegiatan & galeri foto dengan lightbox
-- Struktur organisasi (bagan) & profil organisasi
-- Form pendaftaran anggota online (`/daftar`)
-- Halaman kontak & tombol WhatsApp mengambang
-- Dark mode (mengikuti preferensi sistem) & skeleton loader
+- Beranda (hero, statistik dinamis, berita terbaru)
+- Profil organisasi (visi & misi + logo) & struktur organisasi (bagan)
+- Agenda kegiatan dari database (`/agenda`)
+- Galeri foto dengan lightbox (`/galeri`)
+- Form pendaftaran anggota (`/daftar`) → setelah daftar diarahkan ke grup WhatsApp
+- Form kontak (`/kontak`) tersambung ke backend
+- Dark mode (toggle + tersimpan di localStorage) & skeleton loader
 - Halaman 404
 
 ## Langkah Berikutnya
@@ -96,8 +101,9 @@ Yang sudah diterapkan di backend:
 - **Rate limiting** — seluruh `/api` dibatasi 300 request/15 menit, dan form publik
   (pendaftaran & kontak) dibatasi 10 pengiriman/15 menit per IP.
 - **Validasi input** — memakai `express-validator` (panjang maksimal, format email, tipe data).
+- **Pagination** — endpoint list mendukung `?limit=` & `?offset=` (maks. 200/halaman).
 - **Query parameterized** — aman dari SQL injection.
-- **Error handler** — tidak membocorkan stack trace.
+- **Error handler** — respons tanpa detail; log ringkas, stack trace hanya di development.
 - **X-Powered-By dimatikan** — versi Express tidak terekspos.
 
 > **Produksi (di belakang reverse proxy):** set `TRUST_PROXY=1` di `.env`
@@ -105,7 +111,7 @@ Yang sudah diterapkan di backend:
 
 ## Catatan Keamanan
 
-Hasil `npm audit` di backend menunjukkan 3 kerentanan **hanya pada dependency
-development** (nodemon → chokidar → braces). Dependency production (express, cors,
-dotenv) bersih (0 kerentanan). Jangan jalankan `npm audit fix --force` karena akan
-menurunkan nodemon ke versi lama.
+Hasil `npm audit --omit=dev` di backend menunjukkan **0 kerentanan** pada dependency
+production. Kerentanan yang pernah muncul hanya ada di dependency development
+(nodemon → chokidar → braces), jadi jangan jalankan `npm audit fix --force` karena
+akan menurunkan nodemon ke versi lama.

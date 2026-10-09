@@ -1,16 +1,26 @@
-# React + Vite
+# Frontend — Website Karang Taruna RT 02
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Frontend website Karang Taruna RT 02, dibangun dengan **React 19 + Vite + Tailwind CSS**.
 
-Currently, two official plugins are available:
+## Menjalankan
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```bash
+npm install
+npm run dev      # jalankan di http://localhost:5173
+npm run build    # build produksi
+npm run preview  # preview hasil build
+npm run lint     # oxlint
+```
 
-## React Compiler
+Permintaan `/api/*` dari frontend otomatis diteruskan (proxy) ke backend di
+`http://localhost:5000` (lihat `vite.config.js`).
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Struktur
 
-## Expanding the Oxlint configuration
+- `src/components/` — Navbar, Footer, Skeleton, CountUp
+- `src/pages/` — Beranda, Profil, Struktur, Agenda, Galeri, Daftar, Kontak, dll.
+- `src/hooks/useFetch.js` — hook untuk mengambil data dari API
+- `src/lib/api.js` — helper `fetchData` & `postData`
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+Lihat [`../README.md`](../README.md) untuk dokumentasi lengkap project.
+

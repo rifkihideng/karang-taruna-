@@ -19,16 +19,25 @@ export default function Profil() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-16">
-      <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Profil Organisasi</h1>
-      <p className="mt-2 max-w-3xl text-base leading-7 text-gray-600 dark:text-slate-400">
-        Karang Taruna RT 02 merupakan organisasi kepemudaan yang berperan sebagai wadah
-        pengembangan potensi generasi muda dalam lingkungan RT 02/RW 012. Dengan semangat
-        kebersamaan, inovasi, dan kepedulian sosial, kami berkomitmen untuk mendorong
-        partisipasi aktif anggota dalam kegiatan pemberdayaan masyarakat, pendidikan,
-        seni, olahraga, serta pembangunan lingkungan yang lebih maju dan harmonis.
-      </p>
+      <div className="flex flex-col items-center gap-10 md:flex-row md:items-start md:justify-between md:gap-12">
+        <div className="flex-1">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Profil Organisasi</h1>
+          <p className="mt-3 max-w-3xl text-base leading-7 text-gray-600 dark:text-slate-400">
+            Karang Taruna RT 02 merupakan organisasi kepemudaan yang berperan sebagai wadah
+            pengembangan potensi generasi muda dalam lingkungan RT 02/RW 012. Dengan semangat
+            kebersamaan, inovasi, dan kepedulian sosial, kami berkomitmen untuk mendorong
+            partisipasi aktif anggota dalam kegiatan pemberdayaan masyarakat, pendidikan,
+            seni, olahraga, serta pembangunan lingkungan yang lebih maju dan harmonis.
+          </p>
+        </div>
+        <img
+          src="/logo-karang-taruna.jpeg"
+          alt="Logo Karang Taruna RT 02"
+          className="h-36 w-36 shrink-0 rounded-2xl object-cover shadow-md ring-1 ring-gray-200 dark:ring-slate-700 md:h-44 md:w-44"
+        />
+      </div>
 
-      <div className="mt-10 grid gap-6 md:grid-cols-2">
+      <div className="mt-14 grid gap-6 md:grid-cols-2">
         {visiMisi.map((v) => (
           <div
             key={v.judul}
@@ -40,7 +49,7 @@ export default function Profil() {
         ))}
       </div>
 
-      <div className="mt-12 flex items-center justify-between">
+      <div className="mt-16 flex items-center justify-between">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Struktur Pengurus</h2>
         <Link
           to="/struktur"
@@ -51,7 +60,7 @@ export default function Profil() {
       </div>
 
       {loading ? (
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+        <div className="mt-8 grid gap-5 sm:grid-cols-2 md:grid-cols-3">
           {[0, 1, 2].map((i) => (
             <div
               key={i}
@@ -68,7 +77,7 @@ export default function Profil() {
       ) : error ? (
         <p className="mt-4 text-red-500">Gagal memuat data: {error}</p>
       ) : (
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+        <div className="mt-8 grid gap-5 sm:grid-cols-2 md:grid-cols-3">
           {(anggota || []).map((a) => {
             const Icon = User;
             return (
