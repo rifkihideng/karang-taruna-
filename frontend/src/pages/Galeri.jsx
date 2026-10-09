@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Download, Eye, X } from 'lucide-react';
 import { useFetch } from '../hooks/useFetch';
 import { formatTanggal } from '../lib/format';
@@ -9,7 +10,7 @@ export default function Galeri() {
   const { data, loading, error } = useFetch('/galeri');
   const [active, setActive] = useState(null);
 
-  const galleryGroups = data && data.length ? [{ id: 'dokumentasi-safari', judul: 'Dokumentasi Kegiatan Pengajian Safari', photos: data.slice(0, 4) }] : [];
+  const galleryGroups = data && data.length ? [{ id: 'dokumentasi-safari', judul: 'Dokumentasi Kegiatan Karang Taruna', photos: data }] : [];
 
   const activePhotos = active ? galleryGroups[active.groupIndex]?.photos || [] : [];
   const activeItem = activePhotos[active?.photoIndex ?? 0];
@@ -77,51 +78,58 @@ export default function Galeri() {
               key={group.id}
               className="overflow-hidden rounded-[30px] border border-slate-200/70 bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(248,250,252,0.96),rgba(255,255,255,0.98))] p-3 shadow-[0_30px_80px_-36px_rgba(15,23,42,0.48)] ring-1 ring-slate-200/80 dark:border-slate-700 dark:bg-[linear-gradient(135deg,rgba(15,23,42,0.96),rgba(15,23,42,0.9),rgba(15,23,42,0.96))] dark:ring-slate-700"
             >
-              <div className="columns-1 gap-4 sm:columns-2 lg:columns-3 xl:columns-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {group.photos.map((photo, photoIndex) => (
                   <div
                     key={`${group.id}-${photoIndex}`}
-                    className="group relative mb-4 block w-full overflow-hidden rounded-[24px] bg-slate-100 shadow-[0_22px_45px_-32px_rgba(15,23,42,0.65)] ring-1 ring-slate-200/80 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_28px_65px_-30px_rgba(37,99,235,0.4)] dark:ring-slate-700"
+                    className="group relative aspect-[4/3] w-full overflow-hidden rounded-[24px] bg-slate-200 shadow-[0_22px_45px_-32px_rgba(15,23,42,0.65)] ring-1 ring-slate-200/80 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_28px_65px_-30px_rgba(37,99,235,0.4)] dark:bg-slate-950 dark:ring-slate-700"
                   >
                     <img
                       src={photo.url}
                       alt={photo.judul}
-                      className="w-full object-cover transition duration-500 group-hover:scale-105 group-hover:brightness-105"
+                      loading={photoIndex < 2 ? 'eager' : 'lazy'}
+                      decoding="async"
+                      className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.015] group-hover:brightness-105"
                       style={{
-                        filter: 'contrast(1.04) saturate(1.08)',
-                        aspectRatio: photoIndex % 3 === 0 ? '4 / 5' : photoIndex % 3 === 1 ? '3 / 4' : '5 / 6',
+                        objectPosition: photo.url.endsWith('pengajian bulanan remaja.jpeg')
+                          ? 'center 65%'
+                          : 'center',
                       }}
                     />
 
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-900/25 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-900/25 to-transparent opacity-100 transition-opacity duration-300 md:opacity-0 md:group-hover:opacity-100" />
 
-                    <div className="absolute inset-x-0 top-0 flex items-center justify-between p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                    <div className="absolute inset-x-0 top-0 flex items-center justify-between p-3 opacity-100 transition-opacity duration-300 md:opacity-0 md:group-hover:opacity-100">
                       <span className="rounded-full border border-white/35 bg-white/10 px-2 py-1 text-[10px] font-medium uppercase tracking-[0.18em] text-white backdrop-blur-sm">
-                        Gallery
+                        Dokumentasi
                       </span>
 
                       <div className="flex items-center gap-2">
-                        <button
+                        <motion.button
                           type="button"
                           onClick={() => setActive({ groupIndex: 0, photoIndex })}
                           aria-label={`Lihat ${photo.judul}`}
-                          className="flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white backdrop-blur-sm transition hover:bg-white hover:text-slate-900"
+                          whileTap={{ scale: 0.82, rotate: -12 }}
+                          transition={{ type: 'spring', stiffness: 420, damping: 16 }}
+                          className="flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white backdrop-blur-sm transition-colors hover:bg-white hover:text-slate-900"
                         >
                           <Eye className="h-4 w-4" />
-                        </button>
-                        <a
+                        </motion.button>
+                        <motion.a
                           href={photo.url}
                           download
                           onClick={(e) => e.stopPropagation()}
                           aria-label={`Unduh ${photo.judul}`}
-                          className="flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white backdrop-blur-sm transition hover:bg-white hover:text-slate-900"
+                          whileTap={{ scale: 0.82, y: 2 }}
+                          transition={{ type: 'spring', stiffness: 420, damping: 16 }}
+                          className="flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white backdrop-blur-sm transition-colors hover:bg-white hover:text-slate-900"
                         >
                           <Download className="h-4 w-4" />
-                        </a>
+                        </motion.a>
                       </div>
                     </div>
 
-                    <div className="absolute inset-x-0 bottom-0 p-4 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                    <div className="absolute inset-x-0 bottom-0 p-4 opacity-100 transition-opacity duration-300 md:opacity-0 md:group-hover:opacity-100">
                       <div className="flex items-center justify-between gap-3">
                         <span className="line-clamp-1 text-sm font-medium text-white">{photo.judul}</span>
                       </div>
@@ -158,7 +166,7 @@ export default function Galeri() {
               src={activeItem.url}
               alt={activeItem.judul}
               className="max-h-[80vh] w-full rounded-[24px] border border-white/10 bg-slate-100 object-contain shadow-[0_35px_90px_rgba(15,23,42,0.5)]"
-              style={{ filter: 'contrast(1.05) saturate(1.08)' }}
+              style={{ filter: 'contrast(1.05) saturate(1.1)' }}
             />
             <button
               onClick={close}

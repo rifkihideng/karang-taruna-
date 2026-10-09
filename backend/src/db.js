@@ -116,6 +116,16 @@ async function seedIfEmpty() {
     }
   }
 
+  // Add new gallery entries to databases that already contain older photos.
+  for (const photo of galeri) {
+    const { rows } = await db.execute('SELECT id FROM galeri WHERE url = ? LIMIT 1', [photo.url]);
+    if (rows.length > 0) {
+      await db.execute('UPDATE galeri SET judul = ? WHERE id = ?', [photo.judul, rows[0].id]);
+      continue;
+    }
+    await db.execute('INSERT INTO galeri (judul, url) VALUES (?, ?)', [photo.judul, photo.url]);
+  }
+
   // Pastikan ada admin user — untuk development. Password di-hash dengan bcrypt.
   const { rows: adminCountRow } = await db.execute(`SELECT COUNT(*) AS c FROM admin_users`);
   if (Number(adminCountRow[0].c) === 0) {

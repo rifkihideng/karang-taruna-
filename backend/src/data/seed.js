@@ -86,22 +86,42 @@ export const anggota = [
 export const galeri = [
   {
     id: 1,
-    judul: 'Pengajian Safari Pemuda-Pemudi',
+    judul: 'Pengajian Bulanan Karang Taruna',
     url: '/dokumentasi/pengajian-safari-pemuda-pemudi.jpeg',
   },
   {
     id: 2,
-    judul: 'Dokumentasi Pengajian Safari',
+    judul: 'Pengajian Bulanan Karang Taruna',
     url: '/dokumentasi/dokumentasi-pengajian-safari.jpeg',
   },
   {
     id: 3,
-    judul: 'Kajian Safari Bulanan',
+    judul: 'Pengajian Bulanan Karang Taruna',
     url: '/dokumentasi/pengajian-safari.jpeg',
   },
   {
     id: 4,
-    judul: 'Pengajian Safari Bersama',
+    judul: 'Pengajian Bulanan Karang Taruna',
     url: '/dokumentasi/pengajian-safari-bersama.jpeg',
+  },
+  {
+    id: 5,
+    judul: 'Pengajian Bulanan Karang Taruna',
+    url: '/dokumentasi/pengajian bulanan anak muda.jpeg',
+  },
+  {
+    id: 6,
+    judul: 'Pengajian Bulanan Karang Taruna',
+    url: '/dokumentasi/pengajian bulanan karang taruna.jpeg',
+  },
+  {
+    id: 7,
+    judul: 'Pengajian Bulanan Karang Taruna',
+    url: '/dokumentasi/pengajian bulanan pemuda.jpeg',
+  },
+  {
+    id: 8,
+    judul: 'Pengajian Bulanan Karang Taruna',
+    url: '/dokumentasi/pengajian bulanan remaja.jpeg',
   },
 ];
