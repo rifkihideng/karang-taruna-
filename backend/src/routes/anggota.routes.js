@@ -22,6 +22,26 @@ router.get('/admin/pendaftar', requireAdmin, async (req, res, next) => {
   }
 });
 
+// Rekap anggota: jumlah & daftar anggota lama (seed) vs baru (mendaftar).
+router.get('/admin/rekap', requireAdmin, async (req, res, next) => {
+  try {
+    const { rows } = await db.execute(
+      `SELECT id, nama, jabatan, angkatan, alamat, kontak, minat, status, created_at
+       FROM anggota
+       ORDER BY (created_at IS NULL) DESC, id DESC`
+    );
+    const anggota = rows.map((row) => ({
+      ...row,
+      tipe: row.created_at ? 'baru' : 'lama',
+    }));
+    const lama = anggota.filter((a) => a.tipe === 'lama').length;
+    const baru = anggota.length - lama;
+    res.json({ data: { total: anggota.length, lama, baru, anggota } });
+  } catch (err) {
+    next(err);
+  }
+});
+
 const validateAnggota = [
   body('nama')
     .isString()
