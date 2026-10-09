@@ -81,9 +81,7 @@ export default function Profil() {
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900 dark:text-white">{a.nama}</h3>
-                  <p className="text-sm text-gray-500 dark:text-slate-400">
-                    {a.jabatan} · Angkatan {a.angkatan}
-                  </p>
+                  <p className="text-sm text-gray-500 dark:text-slate-400">{a.jabatan}</p>
                 </div>
               </div>
             );

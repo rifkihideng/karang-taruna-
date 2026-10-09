@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { MapPin, Mail, Phone } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 
 const navigasi = [
   { to: '/', label: 'Beranda' },
@@ -16,9 +16,7 @@ const informasi = [
 ];
 
 const kontak = [
-  { icon: MapPin, text: 'Jl. Merdeka No. 3, RT 02/RW 012' },
-  { icon: Mail, text: 'karangtaruna.rt02@example.com' },
-  { icon: Phone, text: '0812-3456-7890' },
+  { icon: MapPin, text: 'Perumahan Taman Buah Sukamantri, RT02/Rw012' },
 ];
 
 export default function Footer() {
@@ -119,7 +117,7 @@ export default function Footer() {
           {/* Kontak */}
           <div>
             <h4 className="text-xs font-bold uppercase tracking-[0.18em] text-gray-900 dark:text-white">
-              Kontak
+              Lokasi
             </h4>
             <ul className="mt-5 space-y-3 text-sm text-gray-600 dark:text-slate-400">
               {kontak.map((k) => (

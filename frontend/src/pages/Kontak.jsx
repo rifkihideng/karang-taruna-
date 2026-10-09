@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { postData } from '../lib/api';
 
 const info = [
-  { judul: 'Alamat', isi: 'Jl. Merdeka No. 3, RT 02/RW 012, Kelurahan Contoh' },
+  { judul: 'Alamat', isi: 'Perumahan Taman Buah Sukamantri, RT02/Rw012' },
   { judul: 'Email', isi: 'karangtaruna.rt02@example.com' },
   { judul: 'Telepon / WhatsApp', isi: '0812-3456-7890' },
 ];

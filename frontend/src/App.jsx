@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-import WhatsAppButton from './components/WhatsAppButton';
 import Beranda from './pages/Beranda';
 import Profil from './pages/Profil';
 import Struktur from './pages/Struktur';
@@ -51,7 +50,6 @@ export default function App() {
         </div>
       </main>
       <Footer />
-      <WhatsAppButton />
     </div>
   );
 }
