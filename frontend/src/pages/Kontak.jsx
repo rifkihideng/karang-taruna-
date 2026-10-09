@@ -66,6 +66,7 @@ export default function Kontak() {
                 name="nama"
                 type="text"
                 required
+                maxLength={100}
                 value={form.nama}
                 onChange={handleChange}
                 className={inputClass}
@@ -80,6 +81,7 @@ export default function Kontak() {
                 name="email"
                 type="email"
                 required
+                maxLength={100}
                 value={form.email}
                 onChange={handleChange}
                 className={inputClass}
@@ -94,6 +96,7 @@ export default function Kontak() {
                 name="pesan"
                 rows="4"
                 required
+                maxLength={2000}
                 value={form.pesan}
                 onChange={handleChange}
                 className={inputClass}

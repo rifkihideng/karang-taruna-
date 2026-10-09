@@ -46,6 +46,7 @@ export default function Daftar() {
             name="nama"
             type="text"
             required
+            maxLength={100}
             value={form.nama}
             onChange={handleChange}
             placeholder="Nama Anda"
@@ -60,6 +61,7 @@ export default function Daftar() {
             id="alamat"
             name="alamat"
             type="text"
+            maxLength={200}
             value={form.alamat}
             onChange={handleChange}
             placeholder="Alamat tinggal"
@@ -74,6 +76,7 @@ export default function Daftar() {
             id="kontak"
             name="kontak"
             type="tel"
+            maxLength={30}
             value={form.kontak}
             onChange={handleChange}
             placeholder="08xxxxxxxxxx"
