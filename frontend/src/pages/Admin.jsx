@@ -42,6 +42,11 @@ export default function Admin() {
   const [berita, setBerita] = useState([]);
   const [pesan, setPesan] = useState([]);
   const [pendaftar, setPendaftar] = useState([]);
+  const [newPendaftarCount, setNewPendaftarCount] = useState(0);
+  const [pendaftarCutoff, setPendaftarCutoff] = useState(() => {
+    const seen = localStorage.getItem('pendaftarLastSeen');
+    return seen ? Number(seen) : Date.now();
+  });
   const [agendaForm, setAgendaForm] = useState(emptyAgenda);
   const [beritaForm, setBeritaForm] = useState(emptyBerita);
   const [editingId, setEditingId] = useState(null);
@@ -63,6 +68,16 @@ export default function Admin() {
     setBerita(beritaData);
     setPesan(pesanData);
     setPendaftar(pendaftarData);
+
+    const seenRaw = localStorage.getItem('pendaftarLastSeen');
+    const seen = seenRaw ? Number(seenRaw) : null;
+    const cutoff = seen ?? Date.now();
+    const newCount = seen
+      ? pendaftarData.filter((p) => new Date(p.created_at).getTime() > seen).length
+      : 0;
+    setPendaftarCutoff(cutoff);
+    setNewPendaftarCount(newCount);
+    localStorage.setItem('pendaftarLastSeen', String(Date.now()));
   }, []);
 
   const reportLoadError = useCallback((err) => {
@@ -553,9 +568,16 @@ export default function Admin() {
               Informasi pendaftar ini hanya tersedia setelah admin masuk.
             </p>
           </div>
-          <span className="rounded-full bg-amber-50 px-3 py-1 text-sm font-semibold text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">
-            {pendaftar.length} pendaftar
-          </span>
+          <div className="flex items-center gap-2">
+            {newPendaftarCount > 0 && (
+              <span className="rounded-full bg-red-50 px-3 py-1 text-sm font-semibold text-red-700 dark:bg-red-500/10 dark:text-red-300">
+                {newPendaftarCount} baru
+              </span>
+            )}
+            <span className="rounded-full bg-amber-50 px-3 py-1 text-sm font-semibold text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">
+              {pendaftar.length} pendaftar
+            </span>
+          </div>
         </div>
         <div className="mt-4 grid gap-3 md:grid-cols-2">
           {pendaftar.length === 0 ? (
@@ -566,9 +588,16 @@ export default function Admin() {
             <article key={anggota.id} className="rounded-xl border border-slate-200 p-4 dark:border-slate-700">
               <div className="flex items-start justify-between gap-3">
                 <h3 className="font-semibold text-slate-900 dark:text-white">{anggota.nama}</h3>
-                <span className="shrink-0 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">
-                  {anggota.status || 'pending'}
-                </span>
+                <div className="flex shrink-0 items-center gap-2">
+                  {new Date(anggota.created_at).getTime() > pendaftarCutoff && (
+                    <span className="rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700 dark:bg-red-500/10 dark:text-red-300">
+                      Baru
+                    </span>
+                  )}
+                  <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">
+                    {anggota.status || 'pending'}
+                  </span>
+                </div>
               </div>
               <dl className="mt-3 space-y-1.5 text-sm text-slate-600 dark:text-slate-300">
                 {anggota.kontak && <div><dt className="inline font-medium">Kontak: </dt><dd className="inline">{anggota.kontak}</dd></div>}

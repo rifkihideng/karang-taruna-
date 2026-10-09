@@ -19,7 +19,8 @@ export default function Daftar() {
     setPesan('');
     try {
       await postData('/anggota', form);
-      window.location.href = WHATSAPP_GROUP_URL;
+      setStatus('success');
+      setForm({ nama: '', alamat: '', kontak: '' });
     } catch (err) {
       setStatus('error');
       setPesan(err.message || 'Terjadi kesalahan, coba lagi.');
@@ -37,6 +38,25 @@ export default function Daftar() {
         onSubmit={handleSubmit}
         className="mt-8 space-y-5 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100 dark:bg-slate-800 dark:ring-slate-700"
       >
+        {status === 'success' && (
+          <div
+            role="status"
+            className="rounded-xl bg-emerald-50 p-4 text-emerald-800 ring-1 ring-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:ring-emerald-900"
+          >
+            <p className="font-semibold">✅ Pendaftaran berhasil!</p>
+            <p className="mt-1 text-sm">
+              Terima kasih sudah mendaftar. Silakan bergabung ke grup WhatsApp Karang Taruna untuk info terbaru.
+            </p>
+            <a
+              href={WHATSAPP_GROUP_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-3 inline-block rounded-xl bg-emerald-600 px-4 py-2 font-semibold text-white transition hover:bg-emerald-700"
+            >
+              Gabung Grup WhatsApp
+            </a>
+          </div>
+        )}
         <div>
           <label htmlFor="nama" className="block text-sm font-medium text-gray-700 dark:text-slate-300">
             Nama Lengkap <span className="text-red-500">*</span>
@@ -91,16 +111,8 @@ export default function Daftar() {
           {status === 'loading' ? 'Mengirim…' : 'Daftar Sekarang'}
         </button>
 
-        {pesan && (
-          <p
-            className={`text-sm ${
-              status === 'error'
-                ? 'text-red-500 dark:text-red-400'
-                : 'text-blue-600 dark:text-blue-400'
-            }`}
-          >
-            {pesan}
-          </p>
+        {status === 'error' && pesan && (
+          <p className="text-sm text-red-500 dark:text-red-400">{pesan}</p>
         )}
       </form>
     </div>
