@@ -37,27 +37,11 @@ export const berita = [
 export const kegiatan = [
   {
     id: 1,
-    nama: 'Rapat Rutin Bulanan',
-    tanggal: '2026-10-15',
+    nama: 'Pengajian Safari',
+    tanggal: '2026-10-17',
     waktu: '19:30',
-    tempat: 'Balai RT 02',
+    tempat: 'RT 01',
     status: 'terjadwal',
-  },
-  {
-    id: 2,
-    nama: 'Senam Sehat Bersama',
-    tanggal: '2026-10-18',
-    waktu: '06:30',
-    tempat: 'Lapangan RW',
-    status: 'terjadwal',
-  },
-  {
-    id: 3,
-    nama: 'Donor Darah',
-    tanggal: '2026-09-28',
-    waktu: '08:00',
-    tempat: 'Aula Kelurahan',
-    status: 'selesai',
   },
 ];
 
