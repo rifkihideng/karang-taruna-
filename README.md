@@ -17,7 +17,7 @@ karang-taruna/
 │       └── data/seed.js        # Data awal untuk seeding database
 └── frontend/    # React + Vite + Tailwind
     └── src/
-        ├── components/         # Navbar, Footer, Skeleton, CountUp
+        ├── components/         # Navbar, Footer, LoadingScreen, Reveal, Skeleton, CountUp
         ├── pages/              # Beranda, Profil, Struktur, Agenda, Galeri, Daftar, Kontak
         ├── hooks/useFetch.js   # Hook ambil data dari API
         └── lib/                # Helper API & format tanggal
@@ -81,6 +81,8 @@ mendukung pagination via query `?limit=` dan `?offset=` (maks. 200 per halaman).
 - Galeri foto dengan lightbox (`/galeri`)
 - Form pendaftaran anggota (`/daftar`) → setelah daftar diarahkan ke grup WhatsApp
 - Form kontak (`/kontak`) tersambung ke backend
+- Loading screen (logo + motto) saat aplikasi pertama dimuat
+- Animasi scroll reveal (fade-in) di seluruh halaman
 - Dark mode (toggle + tersimpan di localStorage) & skeleton loader
 - Halaman 404
 
