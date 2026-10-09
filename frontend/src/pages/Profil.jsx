@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useFetch } from '../hooks/useFetch';
 import Skeleton from '../components/Skeleton';
 import { User } from 'lucide-react';
+import Reveal from '../components/Reveal';
 
 const visiMisi = [
   {
@@ -19,6 +20,7 @@ export default function Profil() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-16">
+      <Reveal>
       <div className="flex flex-col items-center gap-10 md:flex-row md:items-start md:justify-between md:gap-12">
         <div className="flex-1">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Profil Organisasi</h1>
@@ -36,16 +38,18 @@ export default function Profil() {
           className="h-36 w-36 shrink-0 rounded-2xl object-cover shadow-md ring-1 ring-gray-200 dark:ring-slate-700 md:h-44 md:w-44"
         />
       </div>
+      </Reveal>
 
       <div className="mt-14 grid gap-6 md:grid-cols-2">
-        {visiMisi.map((v) => (
+        {visiMisi.map((v, i) => (
+          <Reveal key={v.judul} delay={0.1 * i}>
           <div
-            key={v.judul}
             className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg dark:bg-slate-800 dark:ring-slate-700"
           >
             <h2 className="text-xl font-semibold text-blue-600 dark:text-blue-400">{v.judul}</h2>
             <p className="mt-2 text-gray-600 dark:text-slate-300">{v.isi}</p>
           </div>
+          </Reveal>
         ))}
       </div>
 
@@ -78,11 +82,11 @@ export default function Profil() {
         <p className="mt-4 text-red-500">Gagal memuat data: {error}</p>
       ) : (
         <div className="mt-8 grid gap-5 sm:grid-cols-2 md:grid-cols-3">
-          {(anggota || []).map((a) => {
+          {(anggota || []).map((a, i) => {
             const Icon = User;
             return (
+              <Reveal key={a.id} delay={Math.min(i * 0.02, 0.4)}>
               <div
-                key={a.id}
                 className="flex items-center gap-4 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg dark:bg-slate-800 dark:ring-slate-700"
               >
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">
@@ -93,6 +97,7 @@ export default function Profil() {
                   <p className="text-sm text-gray-500 dark:text-slate-400">{a.jabatan}</p>
                 </div>
               </div>
+              </Reveal>
             );
           })}
         </div>

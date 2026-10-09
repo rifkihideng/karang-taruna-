@@ -2,6 +2,7 @@ import { Calendar, Clock, MapPin } from 'lucide-react';
 import { useFetch } from '../hooks/useFetch';
 import { formatTanggal } from '../lib/format';
 import Skeleton from '../components/Skeleton';
+import Reveal from '../components/Reveal';
 
 const statusStyle = {
   terjadwal: 'bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300',
@@ -18,10 +19,12 @@ export default function Agenda() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-16">
-      <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Agenda Kegiatan</h1>
-      <p className="mt-2 text-gray-600 dark:text-slate-400">
-        Jadwal kegiatan Karang Taruna RT 02 yang akan datang maupun yang sudah terlaksana.
-      </p>
+      <Reveal>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Agenda Kegiatan</h1>
+        <p className="mt-2 text-gray-600 dark:text-slate-400">
+          Jadwal kegiatan Karang Taruna RT 02 yang akan datang maupun yang sudah terlaksana.
+        </p>
+      </Reveal>
 
       {loading ? (
         <div className="mt-8 space-y-4">
@@ -42,9 +45,9 @@ export default function Agenda() {
         <p className="mt-8 text-gray-500 dark:text-slate-400">Belum ada agenda kegiatan.</p>
       ) : (
         <div className="mt-8 space-y-4">
-          {(kegiatan || []).map((k) => (
+          {(kegiatan || []).map((k, i) => (
+            <Reveal key={k.id} delay={0.05 * i}>
             <article
-              key={k.id}
               className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg dark:bg-slate-800 dark:ring-slate-700"
             >
               <span
@@ -74,6 +77,7 @@ export default function Agenda() {
                 )}
               </div>
             </article>
+            </Reveal>
           ))}
         </div>
       )}

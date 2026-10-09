@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, Download, Eye, X } from 'lucide-react';
 import { useFetch } from '../hooks/useFetch';
 import { formatTanggal } from '../lib/format';
 import Skeleton from '../components/Skeleton';
+import Reveal from '../components/Reveal';
 
 export default function Galeri() {
   const { data, loading, error } = useFetch('/galeri');
@@ -41,6 +42,7 @@ export default function Galeri() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-16">
+      <Reveal>
       <div className="mb-8 flex flex-col gap-4 rounded-[28px] border border-slate-200/80 bg-white/80 p-6 shadow-[0_22px_60px_-28px_rgba(15,23,42,0.35)] backdrop-blur-sm dark:border-slate-700/70 dark:bg-slate-900/70 md:flex-row md:items-end md:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Galeri Foto</h1>
@@ -49,6 +51,7 @@ export default function Galeri() {
           Dokumentasi kegiatan Karang Taruna RT 02. Setiap momen kami abadikan dengan tampilan yang elegan, rapi, dan siap dibagikan.
         </p>
       </div>
+      </Reveal>
 
       {loading ? (
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

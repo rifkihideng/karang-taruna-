@@ -1,6 +1,7 @@
 import { User } from 'lucide-react';
 import { useFetch } from '../hooks/useFetch';
 import Skeleton from '../components/Skeleton';
+import Reveal from '../components/Reveal';
 
 function PersonCard({ p }) {
   return (
@@ -42,12 +43,14 @@ export default function Struktur() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-16">
-      <h1 className="text-center text-3xl font-bold text-gray-900 dark:text-white">
-        Struktur Organisasi
-      </h1>
-      <p className="mt-2 text-center text-gray-600 dark:text-slate-400">
-        Susunan kepengurusan Karang Taruna RT 02.
-      </p>
+      <Reveal>
+        <h1 className="text-center text-3xl font-bold text-gray-900 dark:text-white">
+          Struktur Organisasi
+        </h1>
+        <p className="mt-2 text-center text-gray-600 dark:text-slate-400">
+          Susunan kepengurusan Karang Taruna RT 02.
+        </p>
+      </Reveal>
 
       {loading ? (
         <div className="mt-12 flex flex-col items-center space-y-6">

@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useFetch } from '../hooks/useFetch';
 import Skeleton from '../components/Skeleton';
 import CountUp from '../components/CountUp';
+import Reveal from '../components/Reveal';
 
 const statItems = [
   { key: 'anggota', label: 'Anggota' },
@@ -19,7 +20,7 @@ export default function Beranda() {
       <section className="relative overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.18),transparent_30%),linear-gradient(135deg,#f8fbff_0%,#eef4ff_45%,#f8fafc_100%)] dark:bg-[radial-gradient(circle_at_top_left,_rgba(96,165,250,0.22),transparent_28%),linear-gradient(135deg,#020817_0%,#0f172a_45%,#111827_100%)]">
         <div className="mx-auto max-w-6xl px-4 py-20 md:py-24">
           <div className="grid items-center gap-10 md:grid-cols-[1.2fr_0.8fr]">
-            <div className="text-center md:text-left">
+            <Reveal className="text-center md:text-left">
               <span className="inline-flex rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-blue-700 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-300">
                 Karang Taruna RT 02
               </span>
@@ -44,9 +45,9 @@ export default function Beranda() {
                   Lihat Agenda
                 </Link>
               </div>
-            </div>
+            </Reveal>
 
-            <div className="relative">
+            <Reveal delay={0.15} className="relative">
               <div className="absolute inset-0 -z-10 rounded-[30px] bg-gradient-to-br from-blue-200/40 via-indigo-100/30 to-sky-100/20 blur-2xl dark:from-blue-500/20 dark:via-indigo-500/10 dark:to-sky-500/10" />
               <div className="rounded-[30px] border border-white/60 bg-white/70 p-4 shadow-[0_30px_70px_-30px_rgba(15,23,42,0.45)] backdrop-blur-sm dark:border-slate-700/80 dark:bg-slate-900/70">
                 <div className="overflow-hidden rounded-[24px] bg-slate-100 dark:bg-slate-800">
@@ -73,13 +74,14 @@ export default function Beranda() {
                   </Link>
                 </div>
               </div>
-            </div>
+            </Reveal>
           </div>
         </div>
       </section>
 
       {/* Statistik */}
       <section className="mx-auto max-w-6xl px-4 py-8 md:-mt-6">
+        <Reveal>
         <div className="grid grid-cols-2 gap-4 rounded-[28px] border border-slate-200/80 bg-white/80 p-4 shadow-[0_25px_60px_-30px_rgba(15,23,42,0.45)] backdrop-blur-sm sm:grid-cols-4 dark:border-slate-700/80 dark:bg-slate-900/80">
           {statItems.map((s) => (
             <div
@@ -97,6 +99,7 @@ export default function Beranda() {
             </div>
           ))}
         </div>
+        </Reveal>
       </section>
 
       {/* Berita terbaru */}
@@ -105,6 +108,7 @@ export default function Beranda() {
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Berita Terbaru</h2>
         </div>
 
+        <Reveal>
         <article className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100 dark:bg-slate-800 dark:ring-slate-700">
           <span className="text-xs font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-400">
             Kegiatan
@@ -130,6 +134,7 @@ export default function Beranda() {
             </Link>
           </div>
         </article>
+        </Reveal>
       </section>
 
     </div>
