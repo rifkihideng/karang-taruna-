@@ -6,8 +6,8 @@ import {
   FileText,
   Home,
   Image as ImageIcon,
-  Mail,
   User,
+  UserPlus,
 } from 'lucide-react';
 
 const links = [
@@ -16,7 +16,7 @@ const links = [
   { to: '/berita', label: 'Berita', icon: FileText },
   { to: '/agenda', label: 'Agenda', icon: Bell },
   { to: '/galeri', label: 'Galeri', icon: ImageIcon },
-  { to: '/kontak', label: 'Kontak', icon: Mail },
+  { to: '/daftar', label: 'Daftar', icon: UserPlus },
 ];
 
 export default function Navbar({ dark, onToggleDark }) {

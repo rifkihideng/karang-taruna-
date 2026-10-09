@@ -1,20 +1,13 @@
 import { useState } from 'react';
 import { postData } from '../lib/api';
 
-const minatOptions = [
-  'Sosial & Kemanusiaan',
-  'Olahraga',
-  'Pendidikan',
-  'Keagamaan',
-  'Seni & Budaya',
-  'Kewirausahaan',
-];
+const WHATSAPP_GROUP_URL = 'https://chat.whatsapp.com/LepsHGrmCX8FrvzNP4w0z5';
 
 const inputClass =
   'mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-gray-900 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:ring-blue-500/20';
 
 export default function Daftar() {
-  const [form, setForm] = useState({ nama: '', alamat: '', kontak: '', minat: '' });
+  const [form, setForm] = useState({ nama: '', alamat: '', kontak: '' });
   const [status, setStatus] = useState('idle');
   const [pesan, setPesan] = useState('');
 
@@ -25,10 +18,8 @@ export default function Daftar() {
     setStatus('loading');
     setPesan('');
     try {
-      const res = await postData('/anggota', form);
-      setStatus('success');
-      setPesan(res.message || 'Pendaftaran berhasil!');
-      setForm({ nama: '', alamat: '', kontak: '', minat: '' });
+      await postData('/anggota', form);
+      window.location.href = WHATSAPP_GROUP_URL;
     } catch (err) {
       setStatus('error');
       setPesan(err.message || 'Terjadi kesalahan, coba lagi.');
@@ -89,26 +80,6 @@ export default function Daftar() {
             className={inputClass}
           />
         </div>
-        <div>
-          <label htmlFor="minat" className="block text-sm font-medium text-gray-700 dark:text-slate-300">
-            Bidang Minat
-          </label>
-          <select
-            id="minat"
-            name="minat"
-            value={form.minat}
-            onChange={handleChange}
-            className={inputClass}
-          >
-            <option value="">— Pilih bidang —</option>
-            {minatOptions.map((m) => (
-              <option key={m} value={m}>
-                {m}
-              </option>
-            ))}
-          </select>
-        </div>
-
         <button
           type="submit"
           disabled={status === 'loading'}
