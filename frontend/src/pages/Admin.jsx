@@ -28,25 +28,22 @@ export default function Admin() {
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [stats, setStats] = useState(null);
-  const [berita, setBerita] = useState([]);
   const [kegiatan, setKegiatan] = useState([]);
   const [pendaftar, setPendaftar] = useState([]);
   const [agendaForm, setAgendaForm] = useState(emptyAgenda);
   const [editingId, setEditingId] = useState(null);
 
   const loadData = useCallback(async () => {
-    const [statsData, beritaData, kegiatanData, pendaftarData] = await Promise.all([
+    const [statsData, kegiatanData, pendaftarData] = await Promise.all([
       fetchData('/stats'),
-      fetchData('/berita?limit=10&offset=0'),
       fetchData('/kegiatan'),
       fetchData('/anggota/admin/pendaftar'),
     ]);
-    return { statsData, beritaData, kegiatanData, pendaftarData };
+    return { statsData, kegiatanData, pendaftarData };
   }, []);
 
-  const applyDashboardData = useCallback(({ statsData, beritaData, kegiatanData, pendaftarData }) => {
+  const applyDashboardData = useCallback(({ statsData, kegiatanData, pendaftarData }) => {
     setStats(statsData);
-    setBerita(beritaData);
     setKegiatan(kegiatanData);
     setPendaftar(pendaftarData);
   }, []);
@@ -92,7 +89,6 @@ export default function Admin() {
     localStorage.removeItem('adminToken');
     setToken(null);
     setStats(null);
-    setBerita([]);
     setKegiatan([]);
     setPendaftar([]);
     setAgendaForm(emptyAgenda);
@@ -234,11 +230,10 @@ export default function Admin() {
       {error && <p role="alert" className="mt-5 rounded-xl bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">{error}</p>}
       {notice && <p role="status" className="mt-5 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300">{notice}</p>}
 
-      <section className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <section className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-3">
         {[
           ['Anggota', stats?.anggota],
           ['Kegiatan', stats?.kegiatan],
-          ['Berita', stats?.berita],
           ['Galeri', stats?.galeri],
         ].map(([label, value]) => (
           <div key={label} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">
@@ -410,18 +405,6 @@ export default function Admin() {
         </div>
       </section>
 
-      <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800 sm:p-6">
-        <h2 className="text-xl font-bold text-slate-900 dark:text-white">Berita terbaru</h2>
-        <div className="mt-4 grid gap-3 md:grid-cols-2">
-          {berita.map((item) => (
-            <article key={item.id} className="rounded-xl border border-slate-200 p-4 dark:border-slate-700">
-              <p className="text-sm text-slate-500 dark:text-slate-400">{item.kategori} · {formatDate(item.tanggal)}</p>
-              <h3 className="mt-1 font-semibold text-slate-900 dark:text-white">{item.judul}</h3>
-              <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{item.ringkasan}</p>
-            </article>
-          ))}
-        </div>
-      </section>
     </div>
   );
 }
