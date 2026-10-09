@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   Bell,
   FileText,
@@ -25,6 +26,13 @@ export default function Navbar({ dark, onToggleDark }) {
     `flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition ${
       isActive
         ? 'bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300'
+        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'
+    }`;
+
+  const desktopNavClass = ({ isActive }) =>
+    `relative flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+      isActive
+        ? 'text-blue-700 dark:text-blue-300'
         : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'
     }`;
 
@@ -64,43 +72,88 @@ export default function Navbar({ dark, onToggleDark }) {
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
-            className="rounded-lg p-2 text-xl leading-none text-gray-600 hover:bg-gray-100 md:hidden dark:text-slate-300 dark:hover:bg-slate-800"
-            aria-label="Buka menu"
+            className="rounded-lg p-2 text-gray-600 hover:bg-gray-100 md:hidden dark:text-slate-300 dark:hover:bg-slate-800"
+            aria-label={open ? 'Tutup menu' : 'Buka menu'}
+            aria-expanded={open}
           >
-            {open ? '✕' : '☰'}
+            <span className={`hamburger ${open ? 'hamburger--open' : ''}`}>
+              <span className="hamburger-line" />
+              <span className="hamburger-line" />
+              <span className="hamburger-line" />
+            </span>
           </button>
         </div>
 
         <ul className="hidden items-center gap-1 md:flex">
-          {links.map((l) => {
+          {links.map((l, i) => {
             const Icon = l.icon;
             return (
-              <li key={l.to}>
-                <NavLink to={l.to} className={navClass}>
-                  <Icon size={18} />
-                  <span>{l.label}</span>
+              <motion.li
+                key={l.to}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, delay: 0.06 * i, ease: 'easeOut' }}
+              >
+                <NavLink to={l.to} className={desktopNavClass}>
+                  {({ isActive }) => (
+                    <>
+                      {isActive && (
+                        <motion.span
+                          layoutId="nav-pill"
+                          className="absolute inset-0 rounded-lg bg-blue-50 dark:bg-blue-500/10"
+                          transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+                        />
+                      )}
+                      <motion.span
+                        className="relative z-10 flex items-center gap-2"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+                      >
+                        <Icon size={18} />
+                        <span>{l.label}</span>
+                      </motion.span>
+                    </>
+                  )}
                 </NavLink>
-              </li>
+              </motion.li>
             );
           })}
         </ul>
       </nav>
 
-      {open && (
-        <ul className="border-t border-gray-100 px-4 py-2 md:hidden dark:border-slate-800">
-          {links.map((l) => {
-            const Icon = l.icon;
-            return (
-              <li key={l.to}>
-                <NavLink to={l.to} onClick={() => setOpen(false)} className={navClass}>
-                  <Icon size={18} />
-                  <span>{l.label}</span>
-                </NavLink>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            key="mobile-menu"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ height: { duration: 0.3, ease: 'easeInOut' }, opacity: { duration: 0.2 } }}
+            className="overflow-hidden md:hidden"
+          >
+            <ul className="border-t border-gray-100 px-4 py-2 dark:border-slate-800">
+              {links.map((l, i) => {
+                const Icon = l.icon;
+                return (
+                  <motion.li
+                    key={l.to}
+                    initial={{ opacity: 0, x: -16 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -16 }}
+                    transition={{ duration: 0.25, delay: 0.04 * i }}
+                  >
+                    <NavLink to={l.to} onClick={() => setOpen(false)} className={navClass}>
+                      <Icon size={18} />
+                      <span>{l.label}</span>
+                    </NavLink>
+                  </motion.li>
+                );
+              })}
+            </ul>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 }
