@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useFetch } from '../hooks/useFetch';
+import { formatTanggal } from '../lib/format';
 import Skeleton from '../components/Skeleton';
 import CountUp from '../components/CountUp';
 import Reveal from '../components/Reveal';
@@ -13,6 +14,7 @@ const statItems = [
 
 export default function Beranda() {
   const { data: stats, loading: loadingStats } = useFetch('/stats');
+  const { data: berita, loading: loadingBerita } = useFetch('/berita');
 
   return (
     <div>
@@ -108,33 +110,59 @@ export default function Beranda() {
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Berita Terbaru</h2>
         </div>
 
-        <Reveal>
-        <article className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100 dark:bg-slate-800 dark:ring-slate-700">
-          <span className="text-xs font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-400">
-            Kegiatan
-          </span>
-          <h3 className="mt-2 text-xl font-semibold text-gray-900 dark:text-white">
-            Pengajian Safari Pemuda-Pemudi
-          </h3>
-          <p className="mt-2 text-sm text-gray-600 dark:text-slate-300">
-            Dokumentasi kegiatan kebersamaan dan keagamaan pemuda-pemudi Karang Taruna RT 02.
-          </p>
-          <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
-            <Link
-              to="/kegiatan/pengajian-safari"
-              className="text-sm font-semibold text-blue-600 hover:underline dark:text-blue-400"
-            >
-              Baca selengkapnya →
-            </Link>
-            <Link
-              to="/galeri"
-              className="text-sm font-semibold text-blue-600 hover:underline dark:text-blue-400"
-            >
-              Lihat dokumentasi →
-            </Link>
+        {loadingBerita ? (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {[0, 1, 2].map((i) => (
+              <Skeleton key={i} className="h-56 w-full rounded-2xl" />
+            ))}
           </div>
-        </article>
-        </Reveal>
+        ) : !berita || berita.length === 0 ? (
+          <p className="rounded-2xl bg-white p-6 text-gray-500 ring-1 ring-gray-100 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-700">
+            Belum ada berita.
+          </p>
+        ) : (
+          <Reveal>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {berita.slice(0, 3).map((item) => (
+                <article
+                  key={item.id}
+                  className="flex h-full flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100 dark:bg-slate-800 dark:ring-slate-700"
+                >
+                  {item.gambar && (
+                    <img
+                      src={item.gambar}
+                      alt={item.judul}
+                      loading="lazy"
+                      className="h-44 w-full object-cover"
+                    />
+                  )}
+                  <div className="flex flex-1 flex-col p-5">
+                    <span className="text-xs font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-400">
+                      {item.kategori}
+                    </span>
+                    <h3 className="mt-2 text-lg font-semibold text-gray-900 dark:text-white">
+                      {item.judul}
+                    </h3>
+                    <p className="mt-2 flex-1 text-sm text-gray-600 dark:text-slate-300">
+                      {item.ringkasan}
+                    </p>
+                    <div className="mt-4 flex items-center justify-between gap-3 pt-2">
+                      <span className="text-xs text-gray-400 dark:text-slate-500">
+                        {formatTanggal(item.tanggal)}
+                      </span>
+                      <Link
+                        to={`/berita/${item.id}`}
+                        className="text-sm font-semibold text-blue-600 hover:underline dark:text-blue-400"
+                      >
+                        Baca selengkapnya →
+                      </Link>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </Reveal>
+        )}
       </section>
 
     </div>
