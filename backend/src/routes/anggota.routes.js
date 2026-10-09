@@ -1,42 +1,66 @@
 import { Router } from 'express';
-import { anggota } from '../data/seed.js';
+import { db } from '../db.js';
 
 const router = Router();
 
 // GET /api/anggota
-router.get('/', (req, res) => {
-  res.json({ data: anggota });
+router.get('/', async (req, res, next) => {
+  try {
+    const { rows } = await db.execute('SELECT * FROM anggota ORDER BY id');
+    res.json({ data: rows });
+  } catch (err) {
+    next(err);
+  }
 });
 
 // GET /api/anggota/:id
-router.get('/:id', (req, res) => {
-  const item = anggota.find((a) => a.id === Number(req.params.id));
-  if (!item) {
-    return res.status(404).json({ error: 'Anggota tidak ditemukan' });
+router.get('/:id', async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id < 1) {
+      return res.status(400).json({ error: 'ID anggota tidak valid' });
+    }
+
+    const { rows } = await db.execute('SELECT * FROM anggota WHERE id = ?', [id]);
+    const item = rows[0];
+    if (!item) {
+      return res.status(404).json({ error: 'Anggota tidak ditemukan' });
+    }
+    res.json({ data: item });
+  } catch (err) {
+    next(err);
   }
-  res.json({ data: item });
 });
 
-// POST /api/anggota — pendaftaran anggota baru (sementara disimpan di memori)
-router.post('/', (req, res) => {
-  const { nama, alamat, kontak, minat } = req.body || {};
-  if (!nama) {
-    return res.status(400).json({ error: 'Nama wajib diisi' });
+// POST /api/anggota — pendaftaran anggota baru
+router.post('/', async (req, res, next) => {
+  try {
+    const { nama, alamat, kontak, minat } = req.body || {};
+    if (!nama || !String(nama).trim()) {
+      return res.status(400).json({ error: 'Nama wajib diisi' });
+    }
+
+    const result = await db.execute(
+      `INSERT INTO anggota (nama, alamat, kontak, minat, jabatan, angkatan, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [
+        String(nama).trim(),
+        alamat || '',
+        kontak || '',
+        minat || '',
+        'Anggota',
+        String(new Date().getFullYear()),
+        'pending',
+      ]
+    );
+
+    const id = Number(result.lastInsertRowid);
+    const { rows } = await db.execute('SELECT * FROM anggota WHERE id = ?', [id]);
+
+    res.status(201).json({ data: rows[0], message: 'Pendaftaran berhasil diterima' });
+  } catch (err) {
+    next(err);
   }
-
-  const item = {
-    id: anggota.length ? Math.max(...anggota.map((a) => a.id)) + 1 : 1,
-    nama,
-    alamat: alamat || '',
-    kontak: kontak || '',
-    minat: minat || '',
-    jabatan: 'Anggota',
-    angkatan: String(new Date().getFullYear()),
-    status: 'pending',
-  };
-  anggota.push(item);
-
-  res.status(201).json({ data: item, message: 'Pendaftaran berhasil diterima' });
 });
 
 export default router;

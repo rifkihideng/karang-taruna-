@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { postData } from '../lib/api';
 
 const info = [
   { judul: 'Alamat', isi: 'Jl. Merdeka No. 3, RT 02/RW 012, Kelurahan Contoh' },
@@ -10,12 +11,25 @@ const inputClass =
   'mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-gray-900 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:ring-blue-500/20';
 
 export default function Kontak() {
-  const [terkirim, setTerkirim] = useState(false);
+  const [form, setForm] = useState({ nama: '', email: '', pesan: '' });
+  const [status, setStatus] = useState('idle');
+  const [pesan, setPesan] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: kirim pesan ke backend (POST /api/kontak) pada tahap berikutnya.
-    setTerkirim(true);
+    setStatus('loading');
+    setPesan('');
+    try {
+      const res = await postData('/kontak', form);
+      setStatus('success');
+      setPesan(res.message || 'Pesan berhasil dikirim!');
+      setForm({ nama: '', email: '', pesan: '' });
+    } catch (err) {
+      setStatus('error');
+      setPesan(err.message || 'Terjadi kesalahan, coba lagi.');
+    }
   };
 
   return (
@@ -47,29 +61,60 @@ export default function Kontak() {
               <label htmlFor="nama" className="block text-sm font-medium text-gray-700 dark:text-slate-300">
                 Nama
               </label>
-              <input id="nama" type="text" required className={inputClass} />
+              <input
+                id="nama"
+                name="nama"
+                type="text"
+                required
+                value={form.nama}
+                onChange={handleChange}
+                className={inputClass}
+              />
             </div>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-slate-300">
                 Email
               </label>
-              <input id="email" type="email" required className={inputClass} />
+              <input
+                id="email"
+                name="email"
+                type="email"
+                required
+                value={form.email}
+                onChange={handleChange}
+                className={inputClass}
+              />
             </div>
             <div>
               <label htmlFor="pesan" className="block text-sm font-medium text-gray-700 dark:text-slate-300">
                 Pesan
               </label>
-              <textarea id="pesan" rows="4" required className={inputClass} />
+              <textarea
+                id="pesan"
+                name="pesan"
+                rows="4"
+                required
+                value={form.pesan}
+                onChange={handleChange}
+                className={inputClass}
+              />
             </div>
             <button
               type="submit"
-              className="w-full rounded-xl bg-blue-600 px-4 py-2 font-semibold text-white shadow-sm transition-all duration-300 hover:bg-blue-700 hover:shadow-md active:scale-[0.98]"
+              disabled={status === 'loading'}
+              className="w-full rounded-xl bg-blue-600 px-4 py-2 font-semibold text-white shadow-sm transition-all duration-300 hover:bg-blue-700 hover:shadow-md active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Kirim Pesan
+              {status === 'loading' ? 'Mengirim…' : 'Kirim Pesan'}
             </button>
-            {terkirim && (
-              <p className="text-sm text-blue-600 dark:text-blue-400">
-                Terima kasih! Pesan Anda sudah kami terima (simulasi).
+            {pesan && (
+              <p
+                className={`text-sm ${
+                  status === 'error'
+                    ? 'text-red-500 dark:text-red-400'
+                    : 'text-blue-600 dark:text-blue-400'
+                }`}
+              >
+                {pesan}
               </p>
             )}
           </div>

@@ -7,6 +7,7 @@ import anggotaRoutes from './routes/anggota.routes.js';
 import galeriRoutes from './routes/galeri.routes.js';
 import statsRoutes from './routes/stats.routes.js';
 import authRoutes from './routes/auth.routes.js';
+import kontakRoutes from './routes/kontak.routes.js';
 
 const app = express();
 
@@ -28,10 +29,20 @@ app.use('/api/anggota', anggotaRoutes);
 app.use('/api/galeri', galeriRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/kontak', kontakRoutes);
 
 // 404 handler
 app.use((req, res) => {
   res.status(404).json({ error: 'Endpoint tidak ditemukan' });
+});
+
+// Error handler
+app.use((err, req, res, next) => {
+  if (err.type === 'entity.parse.failed') {
+    return res.status(400).json({ error: 'Format JSON pada permintaan tidak valid' });
+  }
+  console.error(err);
+  res.status(err.status || err.statusCode || 500).json({ error: 'Terjadi kesalahan pada server' });
 });
 
 export default app;

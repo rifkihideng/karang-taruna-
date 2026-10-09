@@ -10,8 +10,9 @@ karang-taruna/
 │   ├── server.js
 │   └── src/
 │       ├── app.js              # Setup Express, CORS, routing
+│       ├── db.js               # Koneksi Turso (libSQL) + skema + seeding
 │       ├── routes/             # Endpoint API
-│       └── data/seed.js        # Data contoh (akan diganti database)
+│       └── data/seed.js        # Data awal untuk seeding database
 └── frontend/    # React + Vite + Tailwind
     └── src/
         ├── components/         # Navbar, Footer
@@ -29,6 +30,17 @@ cd backend
 npm install
 npm run dev   # atau: npm start
 ```
+
+Database memakai **Turso (libSQL)**. Untuk koneksi ke database Turso, buat file
+`.env` (contoh ada di `.env.example`) lalu isi:
+
+```
+TURSO_DATABASE_URL=libsql://<nama-db>-<organisasi>.turso.io
+TURSO_AUTH_TOKEN=<token dari dashboard Turso>
+```
+
+Jika keduanya dikosongkan, server otomatis memakai database SQLite lokal di
+`backend/data/karang-taruna.db` (cocok untuk development).
 
 ### 2. Frontend (port 5173)
 
@@ -53,6 +65,7 @@ diteruskan (proxy) ke backend di `http://localhost:5000`.
 | POST   | `/api/anggota`   | Pendaftaran anggota baru  |
 | GET    | `/api/galeri`    | Daftar foto galeri        |
 | GET    | `/api/stats`     | Statistik jumlah data     |
+| POST   | `/api/kontak`    | Simpan pesan form kontak  |
 | POST   | `/api/auth/login`| Login admin (TODO)        |
 
 ## Fitur Frontend
@@ -68,10 +81,10 @@ diteruskan (proxy) ke backend di `http://localhost:5000`.
 
 ## Langkah Berikutnya
 
-- [ ] Ganti data contoh (`seed.js`) dengan database MySQL/PostgreSQL (mis. Prisma)
+- [x] Ganti data contoh (`seed.js`) dengan database — memakai Turso (libSQL)
+- [x] Form kontak tersambung ke backend (POST `/api/kontak`)
 - [ ] Implementasi login admin (JWT + bcrypt) & panel admin untuk kelola konten
 - [ ] Upload foto galeri (mis. Multer / Cloudinary)
-- [ ] Form kontak tersambung ke backend
 - [ ] Deploy: frontend ke Vercel/Netlify, backend ke VPS/Railway/Render
 
 ## Catatan Keamanan
