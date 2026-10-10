@@ -3,20 +3,28 @@ import { Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import LoadingScreen from './components/LoadingScreen';
-import Beranda from './pages/Beranda';
-import Profil from './pages/Profil';
-import Struktur from './pages/Struktur';
-import Berita from './pages/Berita';
-import BeritaDetail from './pages/BeritaDetail';
-import Agenda from './pages/Agenda';
-import PengajianSafari from './pages/PengajianSafari';
-import Galeri from './pages/Galeri';
-import Daftar from './pages/Daftar';
-import Faq from './pages/Faq';
-import TabsDemo from './pages/TabsDemo';
-import NotFound from './pages/NotFound';
 
+const Beranda = lazy(() => import('./pages/Beranda.jsx'));
+const Profil = lazy(() => import('./pages/Profil.jsx'));
+const Struktur = lazy(() => import('./pages/Struktur.jsx'));
+const Berita = lazy(() => import('./pages/Berita.jsx'));
+const BeritaDetail = lazy(() => import('./pages/BeritaDetail.jsx'));
+const Agenda = lazy(() => import('./pages/Agenda.jsx'));
+const PengajianSafari = lazy(() => import('./pages/PengajianSafari.jsx'));
+const Galeri = lazy(() => import('./pages/Galeri.jsx'));
+const Daftar = lazy(() => import('./pages/Daftar.jsx'));
+const Faq = lazy(() => import('./pages/Faq.jsx'));
+const TabsDemo = lazy(() => import('./pages/TabsDemo.jsx'));
 const Admin = lazy(() => import('./pages/Admin.jsx'));
+const NotFound = lazy(() => import('./pages/NotFound.jsx'));
+
+function RouteFallback() {
+  return (
+    <div className="flex min-h-[40vh] items-center justify-center">
+      <span className="h-8 w-8 animate-spin rounded-full border-2 border-blue-500/20 border-t-blue-500" />
+    </div>
+  );
+}
 
 export default function App() {
   const location = useLocation();
@@ -37,21 +45,23 @@ export default function App() {
       <Navbar dark={dark} onToggleDark={() => setDark((v) => !v)} />
       <main className="flex-1">
         <div key={location.pathname} className="animate-fade-in">
-          <Routes location={location}>
-            <Route path="/" element={<Beranda />} />
-            <Route path="/profil" element={<Profil />} />
-            <Route path="/struktur" element={<Struktur />} />
-            <Route path="/berita" element={<Berita />} />
-            <Route path="/berita/:id" element={<BeritaDetail />} />
-            <Route path="/agenda" element={<Agenda />} />
-            <Route path="/kegiatan/pengajian-safari" element={<PengajianSafari />} />
-            <Route path="/galeri" element={<Galeri />} />
-            <Route path="/daftar" element={<Daftar />} />
-            <Route path="/faq" element={<Faq />} />
-            <Route path="/admin" element={<Suspense fallback={<div className="p-6">Memuat admin…</div>}><Admin /></Suspense>} />
-            <Route path="/demo" element={<TabsDemo />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <Suspense fallback={<RouteFallback />}>
+            <Routes location={location}>
+              <Route path="/" element={<Beranda />} />
+              <Route path="/profil" element={<Profil />} />
+              <Route path="/struktur" element={<Struktur />} />
+              <Route path="/berita" element={<Berita />} />
+              <Route path="/berita/:id" element={<BeritaDetail />} />
+              <Route path="/agenda" element={<Agenda />} />
+              <Route path="/kegiatan/pengajian-safari" element={<PengajianSafari />} />
+              <Route path="/galeri" element={<Galeri />} />
+              <Route path="/daftar" element={<Daftar />} />
+              <Route path="/faq" element={<Faq />} />
+              <Route path="/admin" element={<Admin />} />
+              <Route path="/demo" element={<TabsDemo />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
         </div>
       </main>
       <Footer />

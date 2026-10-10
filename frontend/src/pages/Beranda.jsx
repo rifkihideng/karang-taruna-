@@ -56,6 +56,8 @@ export default function Beranda() {
                   <img
                     src="/dokumentasi/pengajian-safari-pemuda-pemudi.jpeg"
                     alt="Pengajian Safari Pemuda-Pemudi"
+                    fetchPriority="high"
+                    decoding="async"
                     className="h-[360px] w-full object-cover md:h-[430px]"
                   />
                 </div>
@@ -133,6 +135,7 @@ export default function Beranda() {
                       src={item.gambar}
                       alt={item.judul}
                       loading="lazy"
+                      decoding="async"
                       className="h-44 w-full object-cover"
                     />
                   )}

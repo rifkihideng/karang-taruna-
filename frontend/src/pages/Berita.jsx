@@ -37,6 +37,7 @@ export default function Berita() {
                   src={item.gambar}
                   alt={item.judul}
                   loading="lazy"
+                  decoding="async"
                   className="h-52 w-full object-cover"
                 />
               )}
