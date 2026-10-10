@@ -1,5 +1,18 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Trash2 } from 'lucide-react';
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Legend,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 import { deleteData, fetchData, postData, postFormData, putData } from '../lib/api';
 
 const emptyAgenda = {
@@ -35,20 +48,19 @@ function formatBulan(key) {
   return new Intl.DateTimeFormat('id-ID', { month: 'short' }).format(new Date(year, month - 1, 1));
 }
 
-function StatBar({ label, jumlah, total }) {
-  const pct = total > 0 ? Math.round((jumlah / total) * 100) : 0;
-  return (
-    <div>
-      <div className="flex items-center justify-between gap-3 text-sm">
-        <span className="capitalize text-slate-600 dark:text-slate-300">{label}</span>
-        <span className="font-semibold text-slate-900 dark:text-white">{jumlah}</span>
-      </div>
-      <div className="mt-1 h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-700">
-        <div className="h-full rounded-full bg-blue-500 dark:bg-blue-400" style={{ width: `${pct}%` }} />
-      </div>
-    </div>
-  );
-}
+const PIE_COLORS = ['#2563eb', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899'];
+
+const tooltipStyle = {
+  backgroundColor: 'rgba(255, 255, 255, 0.96)',
+  border: '1px solid #e2e8f0',
+  borderRadius: 12,
+  boxShadow: '0 10px 30px -12px rgba(15, 23, 42, 0.3)',
+  fontSize: 13,
+  padding: '8px 12px',
+};
+
+const tooltipLabelStyle = { color: '#0f172a', fontWeight: 600 };
+const tooltipItemStyle = { color: '#475569' };
 
 export default function Admin() {
   const [token, setToken] = useState(() => localStorage.getItem('adminToken'));
@@ -426,7 +438,7 @@ export default function Admin() {
           <p className="rounded-2xl bg-white p-6 text-slate-500 ring-1 ring-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-700">
             Memuat statistik pendaftaran…
           </p>
-        ) : (
+        ) : tab !== 'statistik' ? null : (
           <>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               {[
@@ -451,56 +463,115 @@ export default function Admin() {
                 <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800 sm:p-6">
                   <h2 className="text-xl font-bold text-slate-900 dark:text-white">Pendaftaran per bulan</h2>
                   <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">12 bulan terakhir</p>
-                  <div className="mt-6 flex items-end gap-1.5 sm:gap-2">
-                    {statistik.perBulan.map((b) => {
-                      const max = Math.max(1, ...statistik.perBulan.map((x) => x.jumlah));
-                      const height = b.jumlah > 0 ? Math.max(8, (b.jumlah / max) * 100) : 2;
-                      return (
-                        <div key={b.bulan} className="flex flex-1 flex-col items-center gap-1">
-                          <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">{b.jumlah}</span>
-                          <div className="flex h-36 w-full items-end justify-center">
-                            <div
-                              className={`w-full max-w-[42px] rounded-t-md ${
-                                b.jumlah > 0 ? 'bg-blue-500 dark:bg-blue-400' : 'bg-slate-200 dark:bg-slate-700'
-                              }`}
-                              style={{ height: `${height}%` }}
-                            />
-                          </div>
-                          <span className="text-[11px] text-slate-400 dark:text-slate-500">{formatBulan(b.bulan)}</span>
-                        </div>
-                      );
-                    })}
+                  <div className="mt-4 h-72 text-slate-500 dark:text-slate-400">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={statistik.perBulan} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="currentColor" strokeOpacity={0.15} />
+                        <XAxis
+                          dataKey="bulan"
+                          tickFormatter={formatBulan}
+                          tick={{ fill: 'currentColor', fontSize: 12 }}
+                          tickLine={false}
+                          axisLine={false}
+                          interval={0}
+                        />
+                        <YAxis
+                          allowDecimals={false}
+                          tick={{ fill: 'currentColor', fontSize: 12 }}
+                          tickLine={false}
+                          axisLine={false}
+                          width={36}
+                        />
+                        <Tooltip
+                          cursor={{ fill: 'currentColor', fillOpacity: 0.08 }}
+                          contentStyle={tooltipStyle}
+                          labelStyle={tooltipLabelStyle}
+                          itemStyle={tooltipItemStyle}
+                          labelFormatter={(value) => formatBulan(value)}
+                          formatter={(value) => [`${value} pendaftar`, 'Jumlah']}
+                        />
+                        <Bar dataKey="jumlah" name="Pendaftar" fill="#2563eb" radius={[6, 6, 0, 0]} maxBarSize={36} />
+                      </BarChart>
+                    </ResponsiveContainer>
                   </div>
                 </div>
 
                 <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                   <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800 sm:p-6">
                     <h2 className="text-xl font-bold text-slate-900 dark:text-white">Berdasarkan status</h2>
-                    <div className="mt-4 space-y-3">
-                      {statistik.perStatus.map((s) => (
-                        <StatBar key={s.status} label={s.status} jumlah={s.jumlah} total={statistik.total} />
-                      ))}
+                    <div className="mt-4 h-64 text-slate-500 dark:text-slate-400">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={statistik.perStatus}
+                            dataKey="jumlah"
+                            nameKey="status"
+                            innerRadius={48}
+                            outerRadius={78}
+                            paddingAngle={3}
+                            strokeWidth={0}
+                          >
+                            {statistik.perStatus.map((entry, i) => (
+                              <Cell key={entry.status} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip contentStyle={tooltipStyle} itemStyle={tooltipItemStyle} />
+                          <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
+                        </PieChart>
+                      </ResponsiveContainer>
                     </div>
                   </div>
                   <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800 sm:p-6">
                     <h2 className="text-xl font-bold text-slate-900 dark:text-white">Berdasarkan angkatan</h2>
-                    <div className="mt-4 space-y-3">
-                      {statistik.perAngkatan.map((a) => (
-                        <StatBar key={a.angkatan} label={a.angkatan} jumlah={a.jumlah} total={statistik.total} />
-                      ))}
+                    <div className="mt-4 h-64 text-slate-500 dark:text-slate-400">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={statistik.perAngkatan}
+                            dataKey="jumlah"
+                            nameKey="angkatan"
+                            innerRadius={48}
+                            outerRadius={78}
+                            paddingAngle={3}
+                            strokeWidth={0}
+                          >
+                            {statistik.perAngkatan.map((entry, i) => (
+                              <Cell key={entry.angkatan} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip contentStyle={tooltipStyle} itemStyle={tooltipItemStyle} />
+                          <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
+                        </PieChart>
+                      </ResponsiveContainer>
                     </div>
                   </div>
                   <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800 sm:p-6">
                     <h2 className="text-xl font-bold text-slate-900 dark:text-white">Berdasarkan minat</h2>
-                    <div className="mt-4 space-y-3">
-                      {statistik.perMinat.length === 0 ? (
-                        <p className="text-sm text-slate-500 dark:text-slate-400">Belum ada data minat.</p>
-                      ) : (
-                        statistik.perMinat.map((m) => (
-                          <StatBar key={m.minat} label={m.minat} jumlah={m.jumlah} total={statistik.total} />
-                        ))
-                      )}
-                    </div>
+                    {statistik.perMinat.length === 0 ? (
+                      <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">Belum ada data minat.</p>
+                    ) : (
+                      <div className="mt-4 h-64 text-slate-500 dark:text-slate-400">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={statistik.perMinat}
+                              dataKey="jumlah"
+                              nameKey="minat"
+                              innerRadius={48}
+                              outerRadius={78}
+                              paddingAngle={3}
+                              strokeWidth={0}
+                            >
+                              {statistik.perMinat.map((entry, i) => (
+                                <Cell key={entry.minat} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                              ))}
+                            </Pie>
+                            <Tooltip contentStyle={tooltipStyle} itemStyle={tooltipItemStyle} />
+                            <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                    )}
                   </div>
                 </div>
               </>
@@ -858,8 +929,7 @@ export default function Admin() {
                     <th className="py-2 pr-4">Nama</th>
                     <th className="py-2 pr-4">Tipe</th>
                     <th className="py-2 pr-4">Jabatan</th>
-                    <th className="py-2 pr-4">Angkatan</th>
-                    <th className="py-2">Status</th>
+                    <th className="py-2">Angkatan</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -878,8 +948,7 @@ export default function Admin() {
                         </span>
                       </td>
                       <td className="py-2.5 pr-4 text-slate-600 dark:text-slate-300">{a.jabatan || '—'}</td>
-                      <td className="py-2.5 pr-4 text-slate-600 dark:text-slate-300">{a.angkatan || '—'}</td>
-                      <td className="py-2.5 text-slate-600 dark:text-slate-300">{a.status || '—'}</td>
+                      <td className="py-2.5 text-slate-600 dark:text-slate-300">{a.angkatan || '—'}</td>
                     </tr>
                   ))}
                 </tbody>
