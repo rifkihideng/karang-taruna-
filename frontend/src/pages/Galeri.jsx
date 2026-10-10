@@ -1,61 +1,32 @@
-import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Download, Eye, X } from 'lucide-react';
-import { useFetch } from '../hooks/useFetch';
-import { formatTanggal } from '../lib/format';
+﻿import { useFetch } from '../hooks/useFetch';
 import Skeleton from '../components/Skeleton';
 import Reveal from '../components/Reveal';
+import SocialCards from '@/components/ui/card-fan-carousel';
 
 export default function Galeri() {
   const { data, loading, error } = useFetch('/galeri');
-  const [active, setActive] = useState(null);
 
-  const galleryGroups = data && data.length ? [{ id: 'dokumentasi-safari', judul: 'Dokumentasi Kegiatan Karang Taruna', photos: data }] : [];
-
-  const activePhotos = active ? galleryGroups[active.groupIndex]?.photos || [] : [];
-  const activeItem = activePhotos[active?.photoIndex ?? 0];
-
-  const close = () => setActive(null);
-  const next = () => {
-    if (!active) return;
-    const total = activePhotos.length;
-    if (!total) return;
-    setActive((prev) => ({ ...prev, photoIndex: (prev.photoIndex + 1) % total }));
-  };
-  const prev = () => {
-    if (!active) return;
-    const total = activePhotos.length;
-    if (!total) return;
-    setActive((prev) => ({ ...prev, photoIndex: (prev.photoIndex - 1 + total) % total }));
-  };
-
-  useEffect(() => {
-    if (!active) return;
-    const onKey = (e) => {
-      if (e.key === 'Escape') close();
-      if (e.key === 'ArrowRight') next();
-      if (e.key === 'ArrowLeft') prev();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active, activePhotos.length]);
+  const cards = (data || []).map((photo) => ({
+    imgUrl: photo.url,
+    alt: photo.judul,
+  }));
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-16">
+    <div className="px-4 py-16">
       <Reveal>
-      <div className="mb-8 flex flex-col gap-4 rounded-[28px] border border-slate-200/80 bg-white/80 p-6 shadow-[0_22px_60px_-28px_rgba(15,23,42,0.35)] backdrop-blur-sm dark:border-slate-700/70 dark:bg-slate-900/70 md:flex-row md:items-end md:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Galeri Foto</h1>
+        <div className="mx-auto mb-8 flex max-w-6xl flex-col gap-4 rounded-[28px] border border-slate-200/80 bg-white/80 p-6 shadow-[0_22px_60px_-28px_rgba(15,23,42,0.35)] backdrop-blur-sm dark:border-slate-700/70 dark:bg-slate-900/70 md:flex-row md:items-end md:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Galeri Foto</h1>
+          </div>
+          <p className="max-w-xl text-sm leading-6 text-gray-600 dark:text-slate-400">
+            Dokumentasi kegiatan Karang Taruna RT 02. Setiap momen kami abadikan
+            dengan tampilan yang elegan, rapi, dan siap dibagikan.
+          </p>
         </div>
-        <p className="max-w-xl text-sm leading-6 text-gray-600 dark:text-slate-400">
-          Dokumentasi kegiatan Karang Taruna RT 02. Setiap momen kami abadikan dengan tampilan yang elegan, rapi, dan siap dibagikan.
-        </p>
-      </div>
       </Reveal>
 
       {loading ? (
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mx-auto mt-8 grid max-w-6xl gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[0, 1, 2, 3].map((i) => (
             <div
               key={i}
@@ -70,140 +41,20 @@ export default function Galeri() {
           ))}
         </div>
       ) : error ? (
-        <p className="mt-8 text-red-500">Gagal memuat galeri: {error}</p>
+        <p className="mt-8 text-center text-red-500">Gagal memuat galeri: {error}</p>
       ) : (
-        <div className="mt-8">
-          {galleryGroups.map((group) => (
-            <div
-              key={group.id}
-              className="overflow-hidden rounded-[30px] border border-slate-200/70 bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(248,250,252,0.96),rgba(255,255,255,0.98))] p-3 shadow-[0_30px_80px_-36px_rgba(15,23,42,0.48)] ring-1 ring-slate-200/80 dark:border-slate-700 dark:bg-[linear-gradient(135deg,rgba(15,23,42,0.96),rgba(15,23,42,0.9),rgba(15,23,42,0.96))] dark:ring-slate-700"
-            >
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {group.photos.map((photo, photoIndex) => (
-                  <div
-                    key={`${group.id}-${photoIndex}`}
-                    className="group relative aspect-[4/3] w-full overflow-hidden rounded-[24px] bg-slate-200 shadow-[0_22px_45px_-32px_rgba(15,23,42,0.65)] ring-1 ring-slate-200/80 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_28px_65px_-30px_rgba(37,99,235,0.4)] dark:bg-slate-950 dark:ring-slate-700"
-                  >
-                    <img
-                      src={photo.url}
-                      alt={photo.judul}
-                      loading={photoIndex < 2 ? 'eager' : 'lazy'}
-                      decoding="async"
-                      className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.015] group-hover:brightness-105"
-                      style={{
-                        objectPosition: photo.url.endsWith('pengajian bulanan remaja.jpeg')
-                          ? 'center 65%'
-                          : 'center',
-                      }}
-                    />
-
-                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-900/25 to-transparent opacity-100 transition-opacity duration-300 md:opacity-0 md:group-hover:opacity-100" />
-
-                    <div className="absolute inset-x-0 top-0 flex items-center justify-between p-3 opacity-100 transition-opacity duration-300 md:opacity-0 md:group-hover:opacity-100">
-                      <span className="rounded-full border border-white/35 bg-white/10 px-2 py-1 text-[10px] font-medium uppercase tracking-[0.18em] text-white backdrop-blur-sm">
-                        Dokumentasi
-                      </span>
-
-                      <div className="flex items-center gap-2">
-                        <motion.button
-                          type="button"
-                          onClick={() => setActive({ groupIndex: 0, photoIndex })}
-                          aria-label={`Lihat ${photo.judul}`}
-                          whileTap={{ scale: 0.82, rotate: -12 }}
-                          transition={{ type: 'spring', stiffness: 420, damping: 16 }}
-                          className="flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white backdrop-blur-sm transition-colors hover:bg-white hover:text-slate-900"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </motion.button>
-                        <motion.a
-                          href={photo.url}
-                          download
-                          onClick={(e) => e.stopPropagation()}
-                          aria-label={`Unduh ${photo.judul}`}
-                          whileTap={{ scale: 0.82, y: 2 }}
-                          transition={{ type: 'spring', stiffness: 420, damping: 16 }}
-                          className="flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white backdrop-blur-sm transition-colors hover:bg-white hover:text-slate-900"
-                        >
-                          <Download className="h-4 w-4" />
-                        </motion.a>
-                      </div>
-                    </div>
-
-                    <div className="absolute inset-x-0 bottom-0 p-4 opacity-100 transition-opacity duration-300 md:opacity-0 md:group-hover:opacity-100">
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="line-clamp-1 text-sm font-medium text-white">{photo.judul}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-4 flex items-center justify-between gap-3 px-1 pb-1">
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{group.judul}</h2>
-                  <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">
-                    Dokumentasi kegiatan karang taruna RT 02
-                  </p>
-                </div>
-                <span className="rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-white shadow-lg shadow-blue-500/20">
-                  {group.photos.length} foto
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {active && activeItem && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
-          onClick={close}
-        >
-          <div
-            className="animate-modal-in relative w-full max-w-4xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <img
-              src={activeItem.url}
-              alt={activeItem.judul}
-              className="max-h-[80vh] w-full rounded-[24px] border border-white/10 bg-slate-100 object-contain shadow-[0_35px_90px_rgba(15,23,42,0.5)]"
-              style={{ filter: 'contrast(1.05) saturate(1.1)' }}
-            />
-            <button
-              onClick={close}
-              aria-label="Tutup"
-              className="absolute -right-3 -top-3 flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-900 shadow-lg transition hover:scale-105 hover:bg-slate-100"
-            >
-              <X className="h-4 w-4" />
-            </button>
-            <button
-              onClick={prev}
-              aria-label="Sebelumnya"
-              className="absolute left-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-slate-900 shadow-lg transition hover:bg-white"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </button>
-            <button
-              onClick={next}
-              aria-label="Berikutnya"
-              className="absolute right-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-slate-900 shadow-lg transition hover:bg-white"
-            >
-              <ChevronRight className="h-5 w-5" />
-            </button>
-            <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-slate-900/45 px-4 py-3 text-white backdrop-blur-sm">
-              <p className="text-sm font-medium">
-                {activeItem.judul}
-                {activeItem.tanggal && ` · ${formatTanggal(activeItem.tanggal)}`}
+        <div>
+          <Reveal>
+            <div className="mx-auto max-w-6xl text-center">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                Dokumentasi Pengajian Safari Karang Taruna
+              </h2>
+              <p className="mt-2 text-sm text-gray-500 dark:text-slate-400">
+                {cards.length} foto kegiatan pengajian safari yang telah terlaksana.
               </p>
-              <a
-                href={activeItem.url}
-                download
-                className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-white hover:text-slate-900"
-              >
-                <Download className="h-3.5 w-3.5" />
-                Unduh
-              </a>
             </div>
-          </div>
+          </Reveal>
+          <SocialCards cards={cards} />
         </div>
       )}
     </div>
