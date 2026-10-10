@@ -1,48 +1,71 @@
-import { User } from 'lucide-react';
+import { useState } from 'react';
+import { ChevronDown, User } from 'lucide-react';
 import { useFetch } from '../hooks/useFetch';
 import Skeleton from '../components/Skeleton';
 import Reveal from '../components/Reveal';
 
-function PersonCard({ p }) {
+function IntiItem({ p }) {
   return (
-    <div className="w-52 rounded-2xl bg-white p-5 text-center shadow-sm ring-1 ring-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg dark:bg-slate-800 dark:ring-slate-700">
-      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">
-        <User size={24} />
+    <li className="flex items-center justify-between gap-3 rounded-xl bg-white px-4 py-3 shadow-sm ring-1 ring-gray-100 dark:bg-slate-800 dark:ring-slate-700">
+      <div className="flex min-w-0 items-center gap-3">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">
+          <User size={18} />
+        </span>
+        <span className="truncate font-medium text-gray-900 dark:text-white">{p.nama}</span>
       </div>
-      <h3 className="mt-3 font-semibold text-gray-900 dark:text-white">{p.nama}</h3>
-      <p className="text-sm text-gray-500 dark:text-slate-400">{p.jabatan}</p>
-    </div>
+      <span className="shrink-0 text-sm text-gray-500 dark:text-slate-400">{p.jabatan}</span>
+    </li>
   );
 }
 
-function SectionTitle({ jabatan }) {
+function DivisiGroup({ nama, anggota, open, onToggle }) {
   return (
-    <div className="relative pb-2">
-      <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{jabatan}</h2>
-      <span className="absolute bottom-0 left-1/2 h-[2px] w-10 -translate-x-1/2 rounded-full bg-blue-500/70" />
+    <div className="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-gray-100 dark:bg-slate-800 dark:ring-slate-700">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
+      >
+        <span className="font-semibold text-gray-900 dark:text-white">Divisi {nama}</span>
+        <span className="flex items-center gap-2 text-sm text-gray-500 dark:text-slate-400">
+          <span>{anggota.length} anggota</span>
+          <ChevronDown
+            size={18}
+            className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+          />
+        </span>
+      </button>
+      {open && (
+        <ul className="space-y-2 border-t border-gray-100 px-4 py-3 dark:border-slate-700">
+          {anggota.map((p) => (
+            <li key={p.id} className="text-sm text-gray-700 dark:text-slate-300">
+              {p.nama}
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
-}
-
-function Connector({ className = '' }) {
-  return <div className={`rounded-full bg-gray-400 dark:bg-slate-500 ${className}`} />;
 }
 
 export default function Struktur() {
   const { data, loading, error } = useFetch('/anggota');
+  const [open, setOpen] = useState({});
 
   const list = data || [];
-  const ketua = list.filter((a) => a.jabatan === 'Ketua');
   const inti = list.filter((a) =>
-    ['Wakil Ketua', 'Sekretaris', 'Bendahara'].includes(a.jabatan)
+    ['Ketua', 'Wakil Ketua', 'Sekretaris', 'Bendahara'].includes(a.jabatan)
   );
   const bidangOrder = ['PDD', 'Humas', 'Rohani', 'Olahraga', 'Anggota'];
   const bidang = bidangOrder
     .map((nama) => ({ nama, anggota: list.filter((a) => a.jabatan === nama) }))
     .filter((b) => b.anggota.length > 0);
 
+  const toggle = (nama) => setOpen((prev) => ({ ...prev, [nama]: !prev[nama] }));
+
   return (
-    <div className="mx-auto max-w-6xl px-4 py-16">
+    <div className="mx-auto max-w-3xl px-4 py-16">
       <Reveal>
         <h1 className="text-center text-3xl font-bold text-gray-900 dark:text-white">
           Struktur Organisasi
@@ -53,49 +76,46 @@ export default function Struktur() {
       </Reveal>
 
       {loading ? (
-        <div className="mt-12 flex flex-col items-center space-y-6">
-          <Skeleton className="h-28 w-56" />
-          <div className="flex gap-8">
-            <Skeleton className="h-28 w-52" />
-            <Skeleton className="h-28 w-52" />
-          </div>
+        <div className="mt-10 space-y-3">
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-12 w-full" />
         </div>
       ) : error ? (
         <p className="mt-8 text-center text-red-500">Gagal memuat data: {error}</p>
+      ) : list.length === 0 ? (
+        <p className="mt-8 text-center text-gray-500 dark:text-slate-400">
+          Belum ada data pengurus.
+        </p>
       ) : (
-        <div className="mt-12">
-          {/* Ketua */}
-          <div className="flex flex-col items-center">
-            <PersonCard p={ketua[0]} />
-            <Connector className="h-10 w-[2px]" />
-            <Connector className="h-[2px] w-64 max-w-full" />
-          </div>
-
-          {/* Wakil Ketua, Sekretaris, Bendahara */}
-          <div className="flex flex-col items-center">
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-10 space-y-8">
+          {/* Pengurus Inti */}
+          <section>
+            <h2 className="mb-3 text-lg font-bold text-gray-900 dark:text-white">
+              Pengurus Inti
+            </h2>
+            <ul className="space-y-2">
               {inti.map((p) => (
-                <div key={p.id} className="flex flex-col items-center">
-                  <Connector className="h-6 w-[2px]" />
-                  <PersonCard p={p} />
-                </div>
+                <IntiItem key={p.id} p={p} />
+              ))}
+            </ul>
+          </section>
+
+          {/* Divisi */}
+          <section>
+            <h2 className="mb-3 text-lg font-bold text-gray-900 dark:text-white">Divisi</h2>
+            <div className="space-y-2">
+              {bidang.map((b) => (
+                <DivisiGroup
+                  key={b.nama}
+                  nama={b.nama}
+                  anggota={b.anggota}
+                  open={Boolean(open[b.nama])}
+                  onToggle={() => toggle(b.nama)}
+                />
               ))}
             </div>
-            <Connector className="h-10 w-[2px]" />
-            <Connector className="h-[2px] w-72 max-w-full" />
-          </div>
-
-          {/* Bidang */}
-          {bidang.map((b) => (
-            <div key={b.nama} className="mt-12 flex flex-col items-center">
-              <SectionTitle jabatan={b.nama} />
-              <div className="mt-5 flex flex-wrap justify-center gap-6">
-                {b.anggota.map((p) => (
-                  <PersonCard key={p.id} p={p} />
-                ))}
-              </div>
-            </div>
-          ))}
+          </section>
         </div>
       )}
     </div>
