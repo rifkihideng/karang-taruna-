@@ -13,7 +13,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { deleteData, fetchData, postData, postFormData, putData } from '../lib/api';
+import { deleteData, fetchData, postData, postFormData, putData, putFormData } from '../lib/api';
 
 const emptyAgenda = {
   nama: '',
@@ -35,9 +35,19 @@ const emptyBerita = {
 const inputClass =
   'mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-white';
 
+function parseDate(value) {
+  if (!value) return new Date(NaN);
+  // created_at SQLite disimpan sebagai UTC 'YYYY-MM-DD HH:MM:SS' tanpa zona.
+  // Tandai sebagai UTC agar jam yang tampil tidak bergeser oleh zona waktu lokal.
+  if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}(:\d{2})?$/.test(value)) {
+    return new Date(`${value.replace(' ', 'T')}Z`);
+  }
+  return new Date(value);
+}
+
 function formatDate(value) {
   if (!value) return 'Tanggal tidak tersedia';
-  const date = new Date(value);
+  const date = parseDate(value);
   return Number.isNaN(date.getTime())
     ? value
     : new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium' }).format(date);
@@ -85,6 +95,7 @@ export default function Admin() {
   const [beritaForm, setBeritaForm] = useState(emptyBerita);
   const [gambarFile, setGambarFile] = useState(null);
   const [editingId, setEditingId] = useState(null);
+  const [editingBeritaId, setEditingBeritaId] = useState(null);
   const [tab, setTab] = useState('dashboard');
 
   const loadData = useCallback(async () => {
@@ -130,7 +141,7 @@ export default function Admin() {
     const seen = seenRaw ? Number(seenRaw) : null;
     const cutoff = seen ?? Date.now();
     const newCount = seen
-      ? pendaftarData.filter((p) => new Date(p.created_at).getTime() > seen).length
+      ? pendaftarData.filter((p) => parseDate(p.created_at).getTime() > seen).length
       : 0;
     setPendaftarCutoff(cutoff);
     setNewPendaftarCount(newCount);
@@ -185,6 +196,9 @@ export default function Admin() {
     setStatistik(null);
     setAgendaForm(emptyAgenda);
     setEditingId(null);
+    setBeritaForm(emptyBerita);
+    setGambarFile(null);
+    setEditingBeritaId(null);
   }
 
   async function refreshData() {
@@ -214,6 +228,27 @@ export default function Admin() {
       status: item.status || 'terjadwal',
     });
     setEditingId(item.id);
+    setError('');
+    setNotice('');
+  }
+
+  function resetBeritaForm() {
+    setBeritaForm(emptyBerita);
+    setGambarFile(null);
+    setEditingBeritaId(null);
+  }
+
+  function editBerita(item) {
+    setBeritaForm({
+      judul: item.judul || '',
+      kategori: item.kategori || '',
+      tanggal: item.tanggal || '',
+      ringkasan: item.ringkasan || '',
+      isi: item.isi || '',
+      gambar: item.gambar || '',
+    });
+    setGambarFile(null);
+    setEditingBeritaId(item.id);
     setError('');
     setNotice('');
   }
@@ -267,13 +302,21 @@ export default function Admin() {
       formData.append('tanggal', beritaForm.tanggal);
       formData.append('ringkasan', beritaForm.ringkasan);
       formData.append('isi', beritaForm.isi);
-      if (gambarFile) formData.append('gambar', gambarFile);
-      await postFormData('/berita', formData);
-      setBeritaForm(emptyBerita);
-      setGambarFile(null);
-      setNotice('Berita berhasil ditambahkan.');
+      if (gambarFile) {
+        formData.append('gambar', gambarFile);
+      } else if (beritaForm.gambar) {
+        formData.append('gambarExisting', beritaForm.gambar);
+      }
+      if (editingBeritaId) {
+        await putFormData(`/berita/${editingBeritaId}`, formData);
+        setNotice('Berita berhasil diperbarui.');
+      } else {
+        await postFormData('/berita', formData);
+        setNotice('Berita berhasil ditambahkan.');
+      }
+      resetBeritaForm();
     } catch (err) {
-      setError(err.message || 'Gagal menambahkan berita');
+      setError(err.message || 'Gagal menyimpan berita');
       setSavingBerita(false);
       return;
     }
@@ -744,7 +787,9 @@ export default function Admin() {
 
       <section className={`${tab === 'berita' ? '' : 'hidden'} mt-8 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]`}>
         <div className="h-fit rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800 sm:p-6">
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white">Tambah berita</h2>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+            {editingBeritaId ? 'Edit berita' : 'Tambah berita'}
+          </h2>
           <form onSubmit={saveBerita} className="mt-4 space-y-4">
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-200">
               Judul berita
@@ -817,13 +862,24 @@ export default function Admin() {
                 Format JPG, PNG, WEBP, GIF, atau AVIF — maksimal 5 MB.
               </span>
             </label>
-            <button
-              type="submit"
-              disabled={savingBerita}
-              className="rounded-xl bg-blue-600 px-4 py-2.5 font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60"
-            >
-              {savingBerita ? 'Menyimpan...' : 'Tambah berita'}
-            </button>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="submit"
+                disabled={savingBerita}
+                className="rounded-xl bg-blue-600 px-4 py-2.5 font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60"
+              >
+                {savingBerita ? 'Menyimpan...' : editingBeritaId ? 'Simpan perubahan' : 'Tambah berita'}
+              </button>
+              {editingBeritaId && (
+                <button
+                  type="button"
+                  onClick={resetBeritaForm}
+                  className="rounded-xl border border-slate-300 px-4 py-2.5 font-medium text-slate-700 dark:border-slate-600 dark:text-slate-200"
+                >
+                  Batal
+                </button>
+              )}
+            </div>
           </form>
         </div>
 
@@ -849,13 +905,22 @@ export default function Admin() {
                     <h3 className="mt-1 font-semibold text-slate-900 dark:text-white">{item.judul}</h3>
                     <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{formatDate(item.tanggal)}</p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => removeBerita(item)}
-                    className="rounded-lg border border-red-200 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 dark:border-red-900 dark:text-red-300 dark:hover:bg-red-950/40"
-                  >
-                    Hapus
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => editBerita(item)}
+                      className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => removeBerita(item)}
+                      className="rounded-lg border border-red-200 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 dark:border-red-900 dark:text-red-300 dark:hover:bg-red-950/40"
+                    >
+                      Hapus
+                    </button>
+                  </div>
                 </div>
               </article>
             ))}
@@ -892,7 +957,7 @@ export default function Admin() {
               <div className="flex items-start justify-between gap-3">
                 <h3 className="font-semibold text-slate-900 dark:text-white">{anggota.nama}</h3>
                 <div className="flex shrink-0 items-center gap-2">
-                  {new Date(anggota.created_at).getTime() > pendaftarCutoff && (
+                  {parseDate(anggota.created_at).getTime() > pendaftarCutoff && (
                     <span className="rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700 dark:bg-red-500/10 dark:text-red-300">
                       Baru
                     </span>

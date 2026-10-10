@@ -62,3 +62,19 @@ export async function postFormData(path, formData) {
   }
   return json;
 }
+
+export async function putFormData(path, formData) {
+  const token = localStorage.getItem('adminToken');
+  const res = await fetch(`${BASE}${path}`, {
+    method: 'PUT',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData,
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const error = new Error(json.error || `Permintaan gagal (status ${res.status})`);
+    error.status = res.status;
+    throw error;
+  }
+  return json;
+}

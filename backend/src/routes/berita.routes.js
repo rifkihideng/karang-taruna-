@@ -141,6 +141,35 @@ router.post('/', requireAdmin, uploadGambar, validateBerita, async (req, res, ne
   }
 });
 
+// PUT /api/berita/:id — perbarui berita (admin only)
+router.put('/:id', requireAdmin, uploadGambar, validateBerita, async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id < 1) {
+      return res.status(400).json({ error: 'ID berita tidak valid' });
+    }
+    if (validationError(req, res)) return;
+
+    const { judul, kategori, tanggal, ringkasan, isi } = req.body;
+    let gambar = req.body.gambarExisting || null;
+    if (req.file) {
+      gambar = await simpanGambar(req.file);
+    }
+
+    const result = await db.execute(
+      'UPDATE berita SET judul = ?, kategori = ?, tanggal = ?, ringkasan = ?, isi = ?, gambar = ? WHERE id = ?',
+      [judul.trim(), kategori.trim(), tanggal, ringkasan.trim(), isi.trim(), gambar, id]
+    );
+    if (Number(result.rowsAffected) === 0) {
+      return res.status(404).json({ error: 'Berita tidak ditemukan' });
+    }
+    const { rows } = await db.execute('SELECT * FROM berita WHERE id = ?', [id]);
+    res.json({ data: rows[0], message: 'Berita berhasil diperbarui' });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // DELETE /api/berita/:id — hapus berita (admin only)
 router.delete('/:id', requireAdmin, async (req, res, next) => {
   try {
