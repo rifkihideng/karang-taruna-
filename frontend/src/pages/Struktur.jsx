@@ -15,33 +15,24 @@ function PersonCard({ p }) {
   );
 }
 
-function BranchRow({ items, widthClass = '' }) {
+function SectionTitle({ jabatan }) {
   return (
-    <div className="flex flex-col items-center md:flex-row md:items-start md:justify-center">
-      {items.map((node, i) => (
-        <div key={i} className={`flex w-full flex-col items-center ${widthClass}`}>
-          <div className="relative h-6 w-full md:h-8">
-            <div
-              className="absolute top-0 hidden h-[2px] bg-gray-300 dark:bg-slate-600 md:block"
-              style={{
-                left: i === 0 ? '50%' : 0,
-                right: i === items.length - 1 ? '50%' : 0,
-              }}
-            />
-            <div className="absolute left-1/2 top-0 h-6 w-[2px] -translate-x-1/2 bg-gray-300 dark:bg-slate-600 md:h-8" />
-          </div>
-          {node}
-        </div>
-      ))}
+    <div className="relative pb-2">
+      <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{jabatan}</h2>
+      <span className="absolute bottom-0 left-1/2 h-[2px] w-10 -translate-x-1/2 rounded-full bg-blue-500/70" />
     </div>
   );
+}
+
+function Connector({ className = '' }) {
+  return <div className={`rounded-full bg-gray-400 dark:bg-slate-500 ${className}`} />;
 }
 
 export default function Struktur() {
   const { data, loading, error } = useFetch('/anggota');
 
   const list = data || [];
-  const ketua = list.filter((a) => a.jabatan === 'Ketua')[0] || null;
+  const ketua = list.filter((a) => a.jabatan === 'Ketua');
   const inti = list.filter((a) =>
     ['Wakil Ketua', 'Sekretaris', 'Bendahara'].includes(a.jabatan)
   );
@@ -71,65 +62,40 @@ export default function Struktur() {
         </div>
       ) : error ? (
         <p className="mt-8 text-center text-red-500">Gagal memuat data: {error}</p>
-      ) : list.length === 0 ? (
-        <p className="mt-8 text-center text-gray-500 dark:text-slate-400">
-          Belum ada data pengurus.
-        </p>
       ) : (
         <div className="mt-12">
           {/* Ketua */}
-          {ketua && (
-            <div className="flex flex-col items-center">
-              <PersonCard p={ketua} />
-              {inti.length > 0 && (
-                <div className="h-8 w-[2px] bg-gray-300 dark:bg-slate-600" />
-              )}
-            </div>
-          )}
+          <div className="flex flex-col items-center">
+            <PersonCard p={ketua[0]} />
+            <Connector className="h-10 w-[2px]" />
+            <Connector className="h-[2px] w-64 max-w-full" />
+          </div>
 
           {/* Wakil Ketua, Sekretaris, Bendahara */}
-          {inti.length > 0 && (
-            <BranchRow
-              items={inti.map((p) => (
-                <PersonCard key={p.id} p={p} />
+          <div className="flex flex-col items-center">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {inti.map((p) => (
+                <div key={p.id} className="flex flex-col items-center">
+                  <Connector className="h-6 w-[2px]" />
+                  <PersonCard p={p} />
+                </div>
               ))}
-              widthClass="md:w-56"
-            />
-          )}
+            </div>
+            <Connector className="h-10 w-[2px]" />
+            <Connector className="h-[2px] w-72 max-w-full" />
+          </div>
 
           {/* Bidang */}
-          {bidang.length > 0 && (
-            <>
-              {inti.length > 0 && (
-                <div className="flex justify-center">
-                  <div className="h-8 w-[2px] bg-gray-300 dark:bg-slate-600" />
-                </div>
-              )}
-              <BranchRow
-                items={bidang.map((b) => (
-                  <div
-                    key={b.nama}
-                    className="w-full rounded-2xl border border-slate-200 bg-white p-4 text-center shadow-sm ring-1 ring-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:ring-slate-700 md:w-44"
-                  >
-                    <h3 className="text-sm font-bold uppercase tracking-wide text-blue-600 dark:text-blue-400">
-                      {b.nama}
-                    </h3>
-                    <div className="mt-3 flex flex-col gap-2">
-                      {b.anggota.map((p) => (
-                        <div
-                          key={p.id}
-                          className="rounded-lg bg-slate-50 px-2 py-1.5 text-sm font-medium text-gray-700 dark:bg-slate-900 dark:text-slate-300"
-                        >
-                          {p.nama}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+          {bidang.map((b) => (
+            <div key={b.nama} className="mt-12 flex flex-col items-center">
+              <SectionTitle jabatan={b.nama} />
+              <div className="mt-5 flex flex-wrap justify-center gap-6">
+                {b.anggota.map((p) => (
+                  <PersonCard key={p.id} p={p} />
                 ))}
-                widthClass="md:w-52"
-              />
-            </>
-          )}
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>
