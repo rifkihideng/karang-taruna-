@@ -208,7 +208,6 @@ router.post('/', formLimiter, validateAnggota, async (req, res, next) => {
         'Anggota',
         String(new Date().getFullYear()),
         'pending',
-        new Date().toISOString(),
       ]
     );
 
