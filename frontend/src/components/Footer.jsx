@@ -49,7 +49,7 @@ export default function Footer() {
             </p>
             <div className="mt-4 flex gap-3">
               <a
-                href="https://instagram.com/karangtaruna.rt02"
+                href="https://www.instagram.com/02youthcrew"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Instagram"
