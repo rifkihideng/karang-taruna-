@@ -37,6 +37,34 @@ function createLocalClient() {
 let activeClient = hasRemoteTursoConfig ? createRemoteClient() : createLocalClient();
 let remoteDown = !hasRemoteTursoConfig;
 
+// SQLite lokal di-cache & skema diinisialisasi sekali, supaya fallback runtime
+// aman dipakai oleh banyak query yang berjalan paralel sekaligus.
+let localClient = null;
+let localSchemaPromise = null;
+
+function getLocalClient() {
+  if (!localClient) localClient = createLocalClient();
+  return localClient;
+}
+
+function ensureLocalSchema() {
+  if (!localSchemaPromise) {
+    localSchemaPromise = (async () => {
+      for (const statement of DDL) {
+        await getLocalClient().execute(statement);
+      }
+      const { rows: anggotaColumns } = await getLocalClient().execute('PRAGMA table_info(anggota)');
+      if (!anggotaColumns.some((column) => column.name === 'created_at')) {
+        await getLocalClient().execute('ALTER TABLE anggota ADD COLUMN created_at TEXT');
+      }
+      if (!anggotaColumns.some((column) => column.name === 'deleted_at')) {
+        await getLocalClient().execute('ALTER TABLE anggota ADD COLUMN deleted_at TEXT');
+      }
+    })();
+  }
+  return localSchemaPromise;
+}
+
 function isConnectionError(err) {
   const msg = String(err?.message || err || '').toLowerCase();
   return [
@@ -60,10 +88,12 @@ async function executeWithFallback(sql, args) {
   try {
     return await activeClient.execute(sql, args);
   } catch (err) {
-    if (hasRemoteTursoConfig && !remoteDown && isConnectionError(err)) {
-      console.warn(`⚠️ Turso terputus saat query (${err.message || err}). Beralih ke SQLite lokal.`);
-      remoteDown = true;
-      activeClient = createLocalClient();
+    if (hasRemoteTursoConfig && isConnectionError(err)) {
+      if (!remoteDown) {
+        remoteDown = true;
+        activeClient = getLocalClient();
+        console.warn(`⚠️ Turso terputus saat query (${err.message || err}). Beralih ke SQLite lokal.`);
+      }
       await ensureLocalSchema();
       return await activeClient.execute(sql, args);
     }
@@ -124,21 +154,6 @@ const DDL = [
     created_at TEXT DEFAULT (datetime('now'))
   )`,
 ];
-
-// Pastikan skema tabel tersedia di SQLite lokal saat fallback runtime terjadi,
-// supaya query tidak gagal dengan "no such table".
-async function ensureLocalSchema() {
-  for (const statement of DDL) {
-    await activeClient.execute(statement);
-  }
-  const { rows: anggotaColumns } = await activeClient.execute('PRAGMA table_info(anggota)');
-  if (!anggotaColumns.some((column) => column.name === 'created_at')) {
-    await activeClient.execute('ALTER TABLE anggota ADD COLUMN created_at TEXT');
-  }
-  if (!anggotaColumns.some((column) => column.name === 'deleted_at')) {
-    await activeClient.execute('ALTER TABLE anggota ADD COLUMN deleted_at TEXT');
-  }
-}
 
 const SEED = [
   {
