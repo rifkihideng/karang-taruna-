@@ -50,20 +50,24 @@ export default function Beranda() {
             </Reveal>
 
             <Reveal delay={0.15} className="relative">
-              <div className="absolute inset-0 -z-10 rounded-[30px] bg-gradient-to-br from-blue-200/40 via-indigo-100/30 to-sky-100/20 blur-2xl dark:from-blue-500/20 dark:via-indigo-500/10 dark:to-sky-500/10" />
-              <div className="rounded-[30px] border border-white/60 bg-white/70 p-4 shadow-[0_30px_70px_-30px_rgba(15,23,42,0.45)] backdrop-blur-sm dark:border-slate-700/80 dark:bg-slate-900/70">
+              <div className="animate-glow-pulse absolute inset-0 -z-10 rounded-[30px] bg-gradient-to-br from-blue-200/40 via-indigo-100/30 to-sky-100/20 blur-2xl dark:from-blue-500/20 dark:via-indigo-500/10 dark:to-sky-500/10" />
+              <div className="animate-float-slow rounded-[30px] border border-white/60 bg-white/70 p-4 shadow-[0_30px_70px_-30px_rgba(15,23,42,0.45)] backdrop-blur-sm dark:border-slate-700/80 dark:bg-slate-900/70">
                 <div className="overflow-hidden rounded-[24px] bg-slate-100 dark:bg-slate-800">
                   <img
                     src="/dokumentasi/pengajian-safari-pemuda-pemudi.jpeg"
                     alt="Pengajian Safari Pemuda-Pemudi"
                     fetchPriority="high"
                     decoding="async"
-                    className="h-[360px] w-full object-cover md:h-[430px]"
+                    className="animate-ken-burns h-[360px] w-full object-cover md:h-[430px]"
                   />
                 </div>
                 <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-4 py-3 dark:bg-slate-800/80">
                   <div>
-                    <p className="text-xs uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                    <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                      <span className="relative flex h-2 w-2">
+                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-500 opacity-75" />
+                        <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-600" />
+                      </span>
                       Kegiatan utama
                     </p>
                     <p className="mt-1 text-base font-semibold text-gray-900 dark:text-white">
