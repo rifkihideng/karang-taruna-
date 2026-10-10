@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 
 // Layar loading ringan: logo + spinner. Ditampilkan sesaat saat aplikasi
 // pertama kali dimuat, lalu memudar dengan halus.
-export default function LoadingScreen({ minDuration = 500 }) {
+export default function LoadingScreen({ minDuration = 2000 }) {
   const [phase, setPhase] = useState('visible'); // visible | fading | hidden
 
   useEffect(() => {
