@@ -37,6 +37,10 @@ function createLocalClient() {
 let activeClient = hasRemoteTursoConfig ? createRemoteClient() : createLocalClient();
 let remoteDown = !hasRemoteTursoConfig;
 
+// Di Vercel/serverless, filesystem read-only sehingga fallback SQLite lokal
+// tidak bisa dipakai — cukup andalkan Turso (env VAR sudah disediakan).
+const isVercel = process.env.VERCEL === '1' || process.env.NODE_ENV === 'production';
+
 // SQLite lokal di-cache & skema diinisialisasi sekali, supaya fallback runtime
 // aman dipakai oleh banyak query yang berjalan paralel sekaligus.
 let localClient = null;
@@ -88,7 +92,7 @@ async function executeWithFallback(sql, args) {
   try {
     return await activeClient.execute(sql, args);
   } catch (err) {
-    if (hasRemoteTursoConfig && isConnectionError(err)) {
+    if (hasRemoteTursoConfig && !isVercel && isConnectionError(err)) {
       if (!remoteDown) {
         remoteDown = true;
         activeClient = getLocalClient();

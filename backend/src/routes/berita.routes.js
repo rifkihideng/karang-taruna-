@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { body, validationResult } from 'express-validator';
 import multer from 'multer';
+import { put } from '@vercel/blob';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -12,7 +13,6 @@ const router = Router();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const uploadDir = path.join(__dirname, '..', '..', 'uploads');
-fs.mkdirSync(uploadDir, { recursive: true });
 
 const ALLOWED_IMAGE_TYPES = [
   'image/jpeg',
@@ -22,17 +22,8 @@ const ALLOWED_IMAGE_TYPES = [
   'image/avif',
 ];
 
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, uploadDir),
-  filename: (_req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
-    const unique = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-    cb(null, `berita-${unique}${ext}`);
-  },
-});
-
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     if (!ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
@@ -51,6 +42,26 @@ function uploadGambar(req, res, next) {
         : err.message || 'Gagal mengunggah gambar';
     res.status(400).json({ error: message });
   });
+}
+
+// Simpan file gambar. Di Vercel/produksi unggah ke Vercel Blob (filesystem
+// serverless tidak bisa dipakai), sedangkan di development simpan ke folder lokal.
+async function simpanGambar(file) {
+  if (process.env.BLOB_READ_WRITE_TOKEN) {
+    const cleanName = file.originalname.replace(/[^\w.\-]+/g, '-');
+    const blob = await put(`berita/${Date.now().toString(36)}-${cleanName}`, file.buffer, {
+      access: 'public',
+      contentType: file.mimetype,
+    });
+    return blob.url;
+  }
+
+  fs.mkdirSync(uploadDir, { recursive: true });
+  const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
+  const unique = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  const filename = `berita-${unique}${ext}`;
+  fs.writeFileSync(path.join(uploadDir, filename), file.buffer);
+  return `/uploads/${filename}`;
 }
 
 const validateBerita = [
@@ -118,7 +129,7 @@ router.post('/', requireAdmin, uploadGambar, validateBerita, async (req, res, ne
   try {
     if (validationError(req, res)) return;
     const { judul, kategori, tanggal, ringkasan, isi } = req.body;
-    const gambar = req.file ? `/uploads/${req.file.filename}` : null;
+    const gambar = req.file ? await simpanGambar(req.file) : null;
     const result = await db.execute(
       'INSERT INTO berita (judul, kategori, tanggal, ringkasan, isi, gambar) VALUES (?, ?, ?, ?, ?, ?)',
       [judul.trim(), kategori.trim(), tanggal, ringkasan.trim(), isi.trim(), gambar]

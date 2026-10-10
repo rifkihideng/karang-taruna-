@@ -93,7 +93,38 @@ mendukung pagination via query `?limit=` dan `?offset=` (maks. 200 per halaman).
 - [x] Form kontak tersambung ke backend (POST `/api/kontak`)
 - [x] Implementasi login admin (JWT + bcrypt) & panel admin untuk kelola konten (basic development flow)
 - [ ] Upload foto galeri (mis. Multer / Cloudinary)
-- [ ] Deploy: frontend ke Vercel/Netlify, backend ke VPS/Railway/Render
+- [x] Siap deploy ke Vercel (frontend + backend dalam satu project)
+
+## Deploy ke Vercel
+
+Frontend dan backend di-deploy dalam **satu project Vercel**:
+
+- `vercel.json` di root mengatur build frontend (Vite) dan rewrite `/api/*` ke
+  serverless function `api/index.js` yang me-mount Express app.
+- `package.json` di root berisi dependency backend agar bisa di-bundle oleh Vercel.
+- Upload gambar berita memakai **Vercel Blob** di produksi, dan folder lokal
+  `backend/uploads/` di development.
+
+**Langkah:**
+
+1. Push repo ke GitHub.
+2. Di [vercel.com](https://vercel.com) → **Add New Project** → import repo.
+3. Vercel akan otomatis membaca `vercel.json` (framework: Other).
+4. Isi **Environment Variables**:
+   - `TURSO_DATABASE_URL`
+   - `TURSO_AUTH_TOKEN`
+   - `JWT_SECRET`
+   - `ADMIN_PASSWORD`
+   - `ADMIN_PEPPER` (opsional)
+   - `CORS_ORIGIN` = URL Vercel kamu (mis. `https://nama-project.vercel.app`)
+   - `BLOB_READ_WRITE_TOKEN` = token dari **Storage → Blob** di dashboard Vercel
+   - `TRUST_PROXY` = `1`
+5. Deploy.
+
+**Catatan:** database SQLite lokal tidak dipakai di Vercel (filesystem read-only);
+backend akan memakai Turso. Foto berita yang sudah terlanjur memakai path
+`/uploads/...` dari development perlu di-upload ulang lewat panel admin setelah
+deploy (gambar baru otomatis masuk Vercel Blob).
 
 ## Admin (development)
 
