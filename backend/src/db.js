@@ -62,7 +62,8 @@ const DDL = [
     kontak TEXT,
     minat TEXT,
     status TEXT DEFAULT 'pending',
-    created_at TEXT
+    created_at TEXT,
+    deleted_at TEXT
   )`,
   `CREATE TABLE IF NOT EXISTS galeri (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -161,6 +162,9 @@ export async function initDb() {
   const { rows: anggotaColumns } = await db.execute('PRAGMA table_info(anggota)');
   if (!anggotaColumns.some((column) => column.name === 'created_at')) {
     await db.execute('ALTER TABLE anggota ADD COLUMN created_at TEXT');
+  }
+  if (!anggotaColumns.some((column) => column.name === 'deleted_at')) {
+    await db.execute('ALTER TABLE anggota ADD COLUMN deleted_at TEXT');
   }
   await seedIfEmpty();
 }

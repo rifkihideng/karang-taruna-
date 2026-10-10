@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Trash2 } from 'lucide-react';
 import { deleteData, fetchData, postData, postFormData, putData } from '../lib/api';
 
 const emptyAgenda = {
@@ -29,6 +30,26 @@ function formatDate(value) {
     : new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium' }).format(date);
 }
 
+function formatBulan(key) {
+  const [year, month] = key.split('-').map(Number);
+  return new Intl.DateTimeFormat('id-ID', { month: 'short' }).format(new Date(year, month - 1, 1));
+}
+
+function StatBar({ label, jumlah, total }) {
+  const pct = total > 0 ? Math.round((jumlah / total) * 100) : 0;
+  return (
+    <div>
+      <div className="flex items-center justify-between gap-3 text-sm">
+        <span className="capitalize text-slate-600 dark:text-slate-300">{label}</span>
+        <span className="font-semibold text-slate-900 dark:text-white">{jumlah}</span>
+      </div>
+      <div className="mt-1 h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-700">
+        <div className="h-full rounded-full bg-blue-500 dark:bg-blue-400" style={{ width: `${pct}%` }} />
+      </div>
+    </div>
+  );
+}
+
 export default function Admin() {
   const [token, setToken] = useState(() => localStorage.getItem('adminToken'));
   const [password, setPassword] = useState('');
@@ -42,6 +63,7 @@ export default function Admin() {
   const [berita, setBerita] = useState([]);
   const [pendaftar, setPendaftar] = useState([]);
   const [rekap, setRekap] = useState(null);
+  const [statistik, setStatistik] = useState(null);
   const [newPendaftarCount, setNewPendaftarCount] = useState(0);
   const [pendaftarCutoff, setPendaftarCutoff] = useState(() => {
     const seen = localStorage.getItem('pendaftarLastSeen');
@@ -54,22 +76,24 @@ export default function Admin() {
   const [tab, setTab] = useState('dashboard');
 
   const loadData = useCallback(async () => {
-    const [statsData, kegiatanData, beritaData, pendaftarData, rekapData] = await Promise.all([
+    const [statsData, kegiatanData, beritaData, pendaftarData, rekapData, statistikData] = await Promise.all([
       fetchData('/stats'),
       fetchData('/kegiatan'),
       fetchData('/berita'),
       fetchData('/anggota/admin/pendaftar'),
       fetchData('/anggota/admin/rekap'),
+      fetchData('/anggota/admin/statistik'),
     ]);
-    return { statsData, kegiatanData, beritaData, pendaftarData, rekapData };
+    return { statsData, kegiatanData, beritaData, pendaftarData, rekapData, statistikData };
   }, []);
 
-  const applyDashboardData = useCallback(({ statsData, kegiatanData, beritaData, pendaftarData, rekapData }) => {
+  const applyDashboardData = useCallback(({ statsData, kegiatanData, beritaData, pendaftarData, rekapData, statistikData }) => {
     setStats(statsData);
     setKegiatan(kegiatanData);
     setBerita(beritaData);
     setPendaftar(pendaftarData);
     setRekap(rekapData);
+    setStatistik(statistikData);
 
     const seenRaw = localStorage.getItem('pendaftarLastSeen');
     const seen = seenRaw ? Number(seenRaw) : null;
@@ -127,6 +151,7 @@ export default function Admin() {
     setBerita([]);
     setPendaftar([]);
     setRekap(null);
+    setStatistik(null);
     setAgendaForm(emptyAgenda);
     setEditingId(null);
   }
@@ -219,6 +244,20 @@ export default function Admin() {
       setNotice('Agenda berhasil dihapus.');
     } catch (err) {
       setError(err.message || 'Gagal menghapus agenda');
+    }
+  }
+
+  async function removeAnggota(item) {
+    if (!window.confirm(`Hapus pendaftar "${item.nama}"?`)) return;
+    setError('');
+    setNotice('');
+    try {
+      await deleteData(`/anggota/${item.id}`);
+      setPendaftar((items) => items.filter((anggota) => anggota.id !== item.id));
+      setNotice('Pendaftar berhasil dihapus.');
+      applyDashboardData(await loadData());
+    } catch (err) {
+      setError(err.message || 'Gagal menghapus pendaftar');
     }
   }
 
@@ -340,6 +379,7 @@ export default function Admin() {
           { id: 'agenda', label: 'Agenda' },
           { id: 'berita', label: 'Berita' },
           { id: 'anggota', label: 'Anggota', badge: newPendaftarCount },
+          { id: 'statistik', label: 'Statistik' },
         ].map((t) => (
           <button
             key={t.id}
@@ -379,6 +419,94 @@ export default function Admin() {
             <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-white">{value ?? '—'}</p>
           </div>
         ))}
+      </section>
+
+      <section className={`${tab === 'statistik' ? '' : 'hidden'} mt-7 space-y-6`}>
+        {!statistik ? (
+          <p className="rounded-2xl bg-white p-6 text-slate-500 ring-1 ring-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-700">
+            Memuat statistik pendaftaran…
+          </p>
+        ) : (
+          <>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {[
+                ['Total pendaftar', statistik.total],
+                ['Bulan ini', statistik.bulanIni],
+                ['Menunggu review', statistik.perStatus.find((s) => s.status === 'pending')?.jumlah ?? 0],
+                ['Total anggota', rekap?.total],
+              ].map(([label, value]) => (
+                <div key={label} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+                  <p className="text-sm text-slate-500 dark:text-slate-400">{label}</p>
+                  <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-white">{value ?? '—'}</p>
+                </div>
+              ))}
+            </div>
+
+            {statistik.total === 0 ? (
+              <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm dark:border-slate-700 dark:bg-slate-800">
+                <p className="text-slate-500 dark:text-slate-400">Belum ada pendaftar.</p>
+              </div>
+            ) : (
+              <>
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800 sm:p-6">
+                  <h2 className="text-xl font-bold text-slate-900 dark:text-white">Pendaftaran per bulan</h2>
+                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">12 bulan terakhir</p>
+                  <div className="mt-6 flex items-end gap-1.5 sm:gap-2">
+                    {statistik.perBulan.map((b) => {
+                      const max = Math.max(1, ...statistik.perBulan.map((x) => x.jumlah));
+                      const height = b.jumlah > 0 ? Math.max(8, (b.jumlah / max) * 100) : 2;
+                      return (
+                        <div key={b.bulan} className="flex flex-1 flex-col items-center gap-1">
+                          <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">{b.jumlah}</span>
+                          <div className="flex h-36 w-full items-end justify-center">
+                            <div
+                              className={`w-full max-w-[42px] rounded-t-md ${
+                                b.jumlah > 0 ? 'bg-blue-500 dark:bg-blue-400' : 'bg-slate-200 dark:bg-slate-700'
+                              }`}
+                              style={{ height: `${height}%` }}
+                            />
+                          </div>
+                          <span className="text-[11px] text-slate-400 dark:text-slate-500">{formatBulan(b.bulan)}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                  <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800 sm:p-6">
+                    <h2 className="text-xl font-bold text-slate-900 dark:text-white">Berdasarkan status</h2>
+                    <div className="mt-4 space-y-3">
+                      {statistik.perStatus.map((s) => (
+                        <StatBar key={s.status} label={s.status} jumlah={s.jumlah} total={statistik.total} />
+                      ))}
+                    </div>
+                  </div>
+                  <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800 sm:p-6">
+                    <h2 className="text-xl font-bold text-slate-900 dark:text-white">Berdasarkan angkatan</h2>
+                    <div className="mt-4 space-y-3">
+                      {statistik.perAngkatan.map((a) => (
+                        <StatBar key={a.angkatan} label={a.angkatan} jumlah={a.jumlah} total={statistik.total} />
+                      ))}
+                    </div>
+                  </div>
+                  <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800 sm:p-6">
+                    <h2 className="text-xl font-bold text-slate-900 dark:text-white">Berdasarkan minat</h2>
+                    <div className="mt-4 space-y-3">
+                      {statistik.perMinat.length === 0 ? (
+                        <p className="text-sm text-slate-500 dark:text-slate-400">Belum ada data minat.</p>
+                      ) : (
+                        statistik.perMinat.map((m) => (
+                          <StatBar key={m.minat} label={m.minat} jumlah={m.jumlah} total={statistik.total} />
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+          </>
+        )}
       </section>
 
       <section className={`${tab === 'agenda' ? '' : 'hidden'} mt-8 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]`}>
@@ -665,6 +793,14 @@ export default function Admin() {
                   <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">
                     {anggota.status || 'pending'}
                   </span>
+                  <button
+                    type="button"
+                    onClick={() => removeAnggota(anggota)}
+                    aria-label={`Hapus pendaftar ${anggota.nama}`}
+                    className="rounded-lg border border-red-200 p-1.5 text-red-600 transition hover:bg-red-50 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950/40"
+                  >
+                    <Trash2 size={16} />
+                  </button>
                 </div>
               </div>
               <dl className="mt-3 space-y-1.5 text-sm text-slate-600 dark:text-slate-300">
