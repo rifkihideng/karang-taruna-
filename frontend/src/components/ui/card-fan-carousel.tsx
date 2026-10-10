@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import gsap from "gsap";
-import { Download, Eye } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, Eye, X } from "lucide-react";
 
 export interface CardItem {
   imgUrl: string;
@@ -31,8 +31,8 @@ function getResponsiveMultiplier(width: number) {
   if (width < 480) return 0.28;
   if (width < 640) return 0.38;
   if (width < 768) return 0.5;
-  if (width < 1024) return 0.75;
-  return 1.0;
+  if (width < 1024) return 0.6;
+  return 0.85;
 }
 
 /**
@@ -79,6 +79,7 @@ export default function SocialCards({ cards }: SocialCardsProps) {
   const totalCards = cards.length;
   const needsPagination = totalCards > MAX_VISIBLE;
   const [centerIndex, setCenterIndex] = useState(needsPagination ? HALF : totalCards >> 1);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   const getVisibleMap = useCallback((center: number) => {
     const map = new Map<number, number>();
@@ -249,6 +250,27 @@ export default function SocialCards({ cards }: SocialCardsProps) {
     };
   }, [centerIndex, totalCards, getVisibleMap, needsPagination]);
 
+  const closeLightbox = useCallback(() => setLightboxIndex(null), []);
+  const prevLightbox = useCallback(
+    () => setLightboxIndex((i) => (i === null ? null : (i - 1 + totalCards) % totalCards)),
+    [totalCards]
+  );
+  const nextLightbox = useCallback(
+    () => setLightboxIndex((i) => (i === null ? null : (i + 1) % totalCards)),
+    [totalCards]
+  );
+
+  useEffect(() => {
+    if (lightboxIndex === null) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeLightbox();
+      if (e.key === "ArrowLeft") prevLightbox();
+      if (e.key === "ArrowRight") nextLightbox();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [lightboxIndex, closeLightbox, prevLightbox, nextLightbox]);
+
   if (!totalCards) return null;
 
   const chevron = (direction: "left" | "right") => (
@@ -256,11 +278,6 @@ export default function SocialCards({ cards }: SocialCardsProps) {
       <polyline points={direction === "left" ? "15 18 9 12 15 6" : "9 18 15 12 9 6"} />
     </svg>
   );
-
-  const openImage = (url?: string) => {
-    if (!url) return;
-    window.open(url, "_blank", "noopener,noreferrer");
-  };
 
   const downloadImage = (url?: string) => {
     if (!url) return;
@@ -273,58 +290,98 @@ export default function SocialCards({ cards }: SocialCardsProps) {
   };
 
   return (
-    <section className="flex flex-col items-center w-full py-4 lg:py-8 px-4 md:px-8 relative z-20">
-      <div className="flex items-center justify-center w-full max-w-[90rem]">
-        <div ref={containerRef} className="fan-layout flex relative justify-center items-center w-full max-w-[80rem]">
-          {cards.map((card, index) => {
-            const image = (
-              <div className="relative w-full h-full overflow-hidden">
-                <img src={card.imgUrl} loading="lazy" alt={card.alt || `Card ${index}`} className="absolute inset-0 w-full h-full object-cover z-10" />
-                <div className="pointer-events-none absolute inset-0 z-20 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-100 transition-opacity duration-300 md:from-black/35 md:opacity-0 md:group-hover:opacity-100" />
-                <div className="absolute inset-x-0 top-0 z-30 flex items-center justify-end gap-1.5 p-2 opacity-100 transition-opacity duration-300 md:opacity-0 md:group-hover:opacity-100">
-                  <button
-                    type="button"
-                    onClick={() => openImage(card.linkUrl || card.imgUrl)}
-                    aria-label={`Lihat ${card.alt || `foto ${index + 1}`}`}
-                    className="flex h-8 w-8 items-center justify-center rounded-full border border-white/30 bg-black/25 text-white backdrop-blur-sm transition hover:bg-white hover:text-slate-900 md:h-9 md:w-9"
-                  >
-                    <Eye size={15} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => downloadImage(card.imgUrl)}
-                    aria-label={`Unduh ${card.alt || `foto ${index + 1}`}`}
-                    className="flex h-8 w-8 items-center justify-center rounded-full border border-white/30 bg-black/25 text-white backdrop-blur-sm transition hover:bg-white hover:text-slate-900 md:h-9 md:w-9"
-                  >
-                    <Download size={15} />
-                  </button>
+    <>
+      <section className="flex flex-col items-center w-full py-4 lg:py-8 px-4 md:px-8 relative z-20">
+        <div className="flex items-center justify-center w-full max-w-[90rem]">
+          <div ref={containerRef} className="fan-layout flex relative justify-center items-center w-full max-w-[80rem]">
+            {cards.map((card, index) => {
+              const image = (
+                <div className="relative w-full h-full overflow-hidden">
+                  <img src={card.imgUrl} loading="lazy" alt={card.alt || `Card ${index}`} className="absolute inset-0 w-full h-full object-cover z-10" />
+                  <div className="pointer-events-none absolute inset-0 z-20 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-100 transition-opacity duration-300 md:from-black/35 md:opacity-0 md:group-hover:opacity-100" />
+                  <div className="absolute inset-x-0 top-0 z-30 flex items-center justify-end gap-1.5 p-2 opacity-100 transition-opacity duration-300 md:opacity-0 md:group-hover:opacity-100">
+                    <button
+                      type="button"
+                      onClick={() => setLightboxIndex(index)}
+                      aria-label={`Lihat ${card.alt || `foto ${index + 1}`}`}
+                      className="flex h-8 w-8 items-center justify-center rounded-full border border-white/30 bg-black/25 text-white backdrop-blur-sm transition hover:bg-white hover:text-slate-900 md:h-9 md:w-9"
+                    >
+                      <Eye size={15} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => downloadImage(card.imgUrl)}
+                      aria-label={`Unduh ${card.alt || `foto ${index + 1}`}`}
+                      className="flex h-8 w-8 items-center justify-center rounded-full border border-white/30 bg-black/25 text-white backdrop-blur-sm transition hover:bg-white hover:text-slate-900 md:h-9 md:w-9"
+                    >
+                      <Download size={15} />
+                    </button>
+                  </div>
                 </div>
-              </div>
-            );
-            return card.linkUrl ? (
-              <a key={index} href={card.linkUrl} target={card.linkUrl.startsWith("http") ? "_blank" : "_self"} rel="noopener noreferrer" className="fan-card group block cursor-pointer">{image}</a>
-            ) : (
-              <div key={index} className="fan-card group">{image}</div>
-            );
-          })}
-        </div>
-      </div>
-
-      {needsPagination && (
-        <div className="flex items-center justify-center gap-4 mt-4 md:mt-6 z-30">
-          <button className={`${ARROW_CLASSES} w-10 h-10 md:w-12 md:h-12`} onClick={() => cycle("left")} aria-label="Previous">
-            {chevron("left")}
-          </button>
-          <div className="flex items-center gap-2">
-            {cards.map((_, i) => (
-              <span key={i} className={`w-2 h-2 rounded-full transition-all duration-300 ${i === centerIndex ? "bg-black/70 dark:bg-white/80 scale-[1.3]" : "bg-black/15 dark:bg-white/15"}`} />
-            ))}
+              );
+              return card.linkUrl ? (
+                <a key={index} href={card.linkUrl} target={card.linkUrl.startsWith("http") ? "_blank" : "_self"} rel="noopener noreferrer" className="fan-card group block cursor-pointer">{image}</a>
+              ) : (
+                <div key={index} className="fan-card group">{image}</div>
+              );
+            })}
           </div>
-          <button className={`${ARROW_CLASSES} w-10 h-10 md:w-12 md:h-12`} onClick={() => cycle("right")} aria-label="Next">
-            {chevron("right")}
+        </div>
+
+        {needsPagination && (
+          <div className="flex items-center justify-center gap-4 mt-4 md:mt-6 z-30">
+            <button className={`${ARROW_CLASSES} w-10 h-10 md:w-12 md:h-12`} onClick={() => cycle("left")} aria-label="Previous">
+              {chevron("left")}
+            </button>
+            <div className="flex items-center gap-2">
+              {cards.map((_, i) => (
+                <span key={i} className={`w-2 h-2 rounded-full transition-all duration-300 ${i === centerIndex ? "bg-black/70 dark:bg-white/80 scale-[1.3]" : "bg-black/15 dark:bg-white/15"}`} />
+              ))}
+            </div>
+            <button className={`${ARROW_CLASSES} w-10 h-10 md:w-12 md:h-12`} onClick={() => cycle("right")} aria-label="Next">
+              {chevron("right")}
+            </button>
+          </div>
+        )}
+      </section>
+
+      {lightboxIndex !== null && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4 backdrop-blur-sm"
+          onClick={closeLightbox}
+        >
+          <button
+            type="button"
+            onClick={closeLightbox}
+            aria-label="Tutup"
+            className="absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white transition hover:bg-white hover:text-slate-900"
+          >
+            <X size={20} />
+          </button>
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); prevLightbox(); }}
+            aria-label="Sebelumnya"
+            className="absolute left-3 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white transition hover:bg-white hover:text-slate-900 md:left-6"
+          >
+            <ChevronLeft size={22} />
+          </button>
+          <img
+            src={cards[lightboxIndex].imgUrl}
+            alt={cards[lightboxIndex].alt || `Foto ${lightboxIndex + 1}`}
+            onClick={(e) => e.stopPropagation()}
+            className="max-h-[85vh] max-w-[90vw] rounded-xl object-contain shadow-2xl"
+          />
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); nextLightbox(); }}
+            aria-label="Berikutnya"
+            className="absolute right-3 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white transition hover:bg-white hover:text-slate-900 md:right-6"
+          >
+            <ChevronRight size={22} />
           </button>
         </div>
       )}
-    </section>
+    </>
   );
 }
