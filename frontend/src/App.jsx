@@ -12,7 +12,7 @@ import Agenda from './pages/Agenda';
 import PengajianSafari from './pages/PengajianSafari';
 import Galeri from './pages/Galeri';
 import Daftar from './pages/Daftar';
-import Kontak from './pages/Kontak';
+import Faq from './pages/Faq';
 import TabsDemo from './pages/TabsDemo';
 import NotFound from './pages/NotFound';
 
@@ -47,7 +47,7 @@ export default function App() {
             <Route path="/kegiatan/pengajian-safari" element={<PengajianSafari />} />
             <Route path="/galeri" element={<Galeri />} />
             <Route path="/daftar" element={<Daftar />} />
-            <Route path="/kontak" element={<Kontak />} />
+            <Route path="/faq" element={<Faq />} />
             <Route path="/admin" element={<Suspense fallback={<div className="p-6">Memuat admin…</div>}><Admin /></Suspense>} />
             <Route path="/demo" element={<TabsDemo />} />
             <Route path="*" element={<NotFound />} />

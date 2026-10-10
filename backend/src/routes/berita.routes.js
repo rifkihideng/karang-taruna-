@@ -1,10 +1,57 @@
 import { Router } from 'express';
 import { body, validationResult } from 'express-validator';
+import multer from 'multer';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { db } from '../db.js';
 import { getPagination } from '../utils/pagination.js';
 import { requireAdmin } from '../middleware/requireAdmin.js';
 
 const router = Router();
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const uploadDir = path.join(__dirname, '..', '..', 'uploads');
+fs.mkdirSync(uploadDir, { recursive: true });
+
+const ALLOWED_IMAGE_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'image/avif',
+];
+
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, uploadDir),
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
+    const unique = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+    cb(null, `berita-${unique}${ext}`);
+  },
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (!ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
+      return cb(new Error('Gambar harus berformat JPG, PNG, WEBP, GIF, atau AVIF'));
+    }
+    cb(null, true);
+  },
+});
+
+function uploadGambar(req, res, next) {
+  upload.single('gambar')(req, res, (err) => {
+    if (!err) return next();
+    const message =
+      err.code === 'LIMIT_FILE_SIZE'
+        ? 'Ukuran gambar maksimal 5 MB'
+        : err.message || 'Gagal mengunggah gambar';
+    res.status(400).json({ error: message });
+  });
+}
 
 const validateBerita = [
   body('judul')
@@ -42,10 +89,6 @@ const validateBerita = [
     .trim()
     .notEmpty()
     .withMessage('Isi berita wajib diisi'),
-  body('gambar')
-    .optional({ values: 'falsy' })
-    .isURL()
-    .withMessage('Gambar harus berupa URL yang valid'),
 ];
 
 function validationError(req, res) {
@@ -71,13 +114,11 @@ router.get('/', async (req, res, next) => {
 });
 
 // POST /api/berita — tambah berita (admin only)
-router.post('/', requireAdmin, validateBerita, async (req, res, next) => {
+router.post('/', requireAdmin, uploadGambar, validateBerita, async (req, res, next) => {
   try {
     if (validationError(req, res)) return;
     const { judul, kategori, tanggal, ringkasan, isi } = req.body;
-    const gambar = typeof req.body.gambar === 'string' && req.body.gambar.trim()
-      ? req.body.gambar.trim()
-      : null;
+    const gambar = req.file ? `/uploads/${req.file.filename}` : null;
     const result = await db.execute(
       'INSERT INTO berita (judul, kategori, tanggal, ringkasan, isi, gambar) VALUES (?, ?, ?, ?, ?, ?)',
       [judul.trim(), kategori.trim(), tanggal, ringkasan.trim(), isi.trim(), gambar]

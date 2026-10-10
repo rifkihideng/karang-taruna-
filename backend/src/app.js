@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import beritaRoutes from './routes/berita.routes.js';
 import kegiatanRoutes from './routes/kegiatan.routes.js';
@@ -50,6 +52,10 @@ app.use('/api/galeri', galeriRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/kontak', kontakRoutes);
+
+// Sajikan file gambar yang diunggah (mis. gambar berita) secara statis.
+const uploadsDir = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'uploads');
+app.use('/uploads', express.static(uploadsDir));
 
 // 404 handler
 app.use((req, res) => {

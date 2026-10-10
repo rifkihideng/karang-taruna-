@@ -18,7 +18,7 @@ Permintaan `/api/*` dari frontend otomatis diteruskan (proxy) ke backend di
 ## Struktur
 
 - `src/components/` — Navbar, Footer, LoadingScreen, Reveal, Skeleton, CountUp
-- `src/pages/` — Beranda, Profil, Struktur, Agenda, Galeri, Daftar, Kontak, dll.
+- `src/pages/` — Beranda, Profil, Struktur, Agenda, Galeri, Daftar, Faq, dll.
 - `src/hooks/useFetch.js` — hook untuk mengambil data dari API
 - `src/lib/api.js` — helper `fetchData` & `postData`
 

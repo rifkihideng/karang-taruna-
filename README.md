@@ -18,7 +18,7 @@ karang-taruna/
 └── frontend/    # React + Vite + Tailwind
     └── src/
         ├── components/         # Navbar, Footer, LoadingScreen, Reveal, Skeleton, CountUp
-        ├── pages/              # Beranda, Profil, Struktur, Agenda, Galeri, Daftar, Kontak
+        ├── pages/              # Beranda, Profil, Struktur, Agenda, Galeri, Daftar, Faq
         ├── hooks/useFetch.js   # Hook ambil data dari API
         └── lib/                # Helper API & format tanggal
 ```
@@ -62,6 +62,7 @@ diteruskan (proxy) ke backend di `http://localhost:5000`.
 | GET    | `/api/health`    | Cek status server         |
 | GET    | `/api/berita`    | Daftar berita             |
 | GET    | `/api/berita/:id`| Detail berita             |
+| POST   | `/api/berita`    | Tambah berita (admin, multipart: unggah file `gambar`) |
 | GET    | `/api/kegiatan`  | Daftar kegiatan           |
 | GET    | `/api/anggota`   | Daftar anggota            |
 | POST   | `/api/anggota`   | Pendaftaran anggota baru  |
@@ -80,7 +81,7 @@ mendukung pagination via query `?limit=` dan `?offset=` (maks. 200 per halaman).
 - Agenda kegiatan dari database (`/agenda`)
 - Galeri foto dengan lightbox (`/galeri`)
 - Form pendaftaran anggota (`/daftar`) → setelah daftar diarahkan ke grup WhatsApp
-- Form kontak (`/kontak`) tersambung ke backend
+- Halaman FAQ (`/faq`) berisi pertanyaan yang sering diajukan
 - Loading screen (logo + motto) saat aplikasi pertama dimuat
 - Animasi scroll reveal (fade-in) di seluruh halaman
 - Dark mode (toggle + tersimpan di localStorage) & skeleton loader

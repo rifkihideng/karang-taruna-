@@ -12,7 +12,7 @@ const informasi = [
   { to: '/agenda', label: 'Agenda' },
   { to: '/galeri', label: 'Galeri' },
   { to: '/daftar', label: 'Daftar' },
-  { to: '/kontak', label: 'Kontak' },
+  { to: '/faq', label: 'FAQ' },
 ];
 
 const kontak = [
@@ -114,7 +114,7 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Kontak */}
+          {/* Lokasi */}
           <div>
             <h4 className="text-xs font-bold uppercase tracking-[0.18em] text-gray-900 dark:text-white">
               Lokasi

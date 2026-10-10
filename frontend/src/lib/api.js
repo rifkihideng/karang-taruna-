@@ -46,3 +46,19 @@ export async function putData(path, body) {
 export async function deleteData(path) {
   return request(path, { method: 'DELETE' });
 }
+
+export async function postFormData(path, formData) {
+  const token = localStorage.getItem('adminToken');
+  const res = await fetch(`${BASE}${path}`, {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData,
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const error = new Error(json.error || `Permintaan gagal (status ${res.status})`);
+    error.status = res.status;
+    throw error;
+  }
+  return json;
+}

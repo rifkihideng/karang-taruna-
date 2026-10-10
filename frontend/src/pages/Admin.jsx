@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { deleteData, fetchData, postData, putData } from '../lib/api';
+import { deleteData, fetchData, postData, postFormData, putData } from '../lib/api';
 
 const emptyAgenda = {
   nama: '',
@@ -40,7 +40,6 @@ export default function Admin() {
   const [stats, setStats] = useState(null);
   const [kegiatan, setKegiatan] = useState([]);
   const [berita, setBerita] = useState([]);
-  const [pesan, setPesan] = useState([]);
   const [pendaftar, setPendaftar] = useState([]);
   const [rekap, setRekap] = useState(null);
   const [newPendaftarCount, setNewPendaftarCount] = useState(0);
@@ -50,26 +49,25 @@ export default function Admin() {
   });
   const [agendaForm, setAgendaForm] = useState(emptyAgenda);
   const [beritaForm, setBeritaForm] = useState(emptyBerita);
+  const [gambarFile, setGambarFile] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [tab, setTab] = useState('dashboard');
 
   const loadData = useCallback(async () => {
-    const [statsData, kegiatanData, beritaData, pesanData, pendaftarData, rekapData] = await Promise.all([
+    const [statsData, kegiatanData, beritaData, pendaftarData, rekapData] = await Promise.all([
       fetchData('/stats'),
       fetchData('/kegiatan'),
       fetchData('/berita'),
-      fetchData('/kontak'),
       fetchData('/anggota/admin/pendaftar'),
       fetchData('/anggota/admin/rekap'),
     ]);
-    return { statsData, kegiatanData, beritaData, pesanData, pendaftarData, rekapData };
+    return { statsData, kegiatanData, beritaData, pendaftarData, rekapData };
   }, []);
 
-  const applyDashboardData = useCallback(({ statsData, kegiatanData, beritaData, pesanData, pendaftarData, rekapData }) => {
+  const applyDashboardData = useCallback(({ statsData, kegiatanData, beritaData, pendaftarData, rekapData }) => {
     setStats(statsData);
     setKegiatan(kegiatanData);
     setBerita(beritaData);
-    setPesan(pesanData);
     setPendaftar(pendaftarData);
     setRekap(rekapData);
 
@@ -127,7 +125,6 @@ export default function Admin() {
     setStats(null);
     setKegiatan([]);
     setBerita([]);
-    setPesan([]);
     setPendaftar([]);
     setRekap(null);
     setAgendaForm(emptyAgenda);
@@ -193,8 +190,16 @@ export default function Admin() {
     setError('');
     setNotice('');
     try {
-      await postData('/berita', beritaForm);
+      const formData = new FormData();
+      formData.append('judul', beritaForm.judul);
+      formData.append('kategori', beritaForm.kategori);
+      formData.append('tanggal', beritaForm.tanggal);
+      formData.append('ringkasan', beritaForm.ringkasan);
+      formData.append('isi', beritaForm.isi);
+      if (gambarFile) formData.append('gambar', gambarFile);
+      await postFormData('/berita', formData);
       setBeritaForm(emptyBerita);
+      setGambarFile(null);
       setNotice('Berita berhasil ditambahkan.');
       applyDashboardData(await loadData());
     } catch (err) {
@@ -227,19 +232,6 @@ export default function Admin() {
       setNotice('Berita berhasil dihapus.');
     } catch (err) {
       setError(err.message || 'Gagal menghapus berita');
-    }
-  }
-
-  async function removePesan(item) {
-    if (!window.confirm(`Hapus pesan dari "${item.nama}"?`)) return;
-    setError('');
-    setNotice('');
-    try {
-      await deleteData(`/kontak/${item.id}`);
-      setPesan((items) => items.filter((pesan) => pesan.id !== item.id));
-      setNotice('Pesan berhasil dihapus.');
-    } catch (err) {
-      setError(err.message || 'Gagal menghapus pesan');
     }
   }
 
@@ -348,7 +340,6 @@ export default function Admin() {
           { id: 'agenda', label: 'Agenda' },
           { id: 'berita', label: 'Berita' },
           { id: 'anggota', label: 'Anggota', badge: newPendaftarCount },
-          { id: 'pesan', label: 'Pesan', badge: pesan.length },
         ].map((t) => (
           <button
             key={t.id}
@@ -575,13 +566,21 @@ export default function Admin() {
               />
             </label>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-200">
-              URL gambar (opsional)
+              Gambar (opsional)
               <input
-                type="url"
-                value={beritaForm.gambar}
-                onChange={(event) => setBeritaForm({ ...beritaForm, gambar: event.target.value })}
-                className={inputClass}
+                type="file"
+                accept="image/*"
+                onChange={(event) => setGambarFile(event.target.files?.[0] || null)}
+                className={`${inputClass} file:mr-3 file:rounded-lg file:border-0 file:bg-blue-50 file:px-3 file:py-1 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-500/10 dark:file:text-blue-300`}
               />
+              {gambarFile && (
+                <span className="mt-1 block text-xs text-slate-500 dark:text-slate-400">
+                  {gambarFile.name} ({(gambarFile.size / 1024 / 1024).toFixed(2)} MB)
+                </span>
+              )}
+              <span className="mt-1 block text-xs text-slate-400 dark:text-slate-500">
+                Format JPG, PNG, WEBP, GIF, atau AVIF — maksimal 5 MB.
+              </span>
             </label>
             <button
               type="submit"
@@ -674,50 +673,6 @@ export default function Admin() {
                 {anggota.minat && <div><dt className="inline font-medium">Minat: </dt><dd className="inline">{anggota.minat}</dd></div>}
                 <div><dt className="inline font-medium">Terdaftar: </dt><dd className="inline">{formatDate(anggota.created_at)}</dd></div>
               </dl>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className={`${tab === 'pesan' ? '' : 'hidden'} mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800 sm:p-6`}>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white">Pesan masuk</h2>
-            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-              Pesan dari form kontak pengunjung website.
-            </p>
-          </div>
-          <span className="rounded-full bg-blue-50 px-3 py-1 text-sm font-semibold text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">
-            {pesan.length} pesan
-          </span>
-        </div>
-        <div className="mt-4 space-y-3">
-          {pesan.length === 0 ? (
-            <p className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500 dark:bg-slate-900 dark:text-slate-400">
-              Belum ada pesan masuk.
-            </p>
-          ) : pesan.map((item) => (
-            <article key={item.id} className="rounded-xl border border-slate-200 p-4 dark:border-slate-700">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <h3 className="font-semibold text-slate-900 dark:text-white">{item.nama}</h3>
-                  <a
-                    href={`mailto:${item.email}`}
-                    className="mt-1 inline-block text-sm text-blue-600 hover:underline dark:text-blue-400"
-                  >
-                    {item.email}
-                  </a>
-                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{formatDate(item.created_at)}</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => removePesan(item)}
-                  className="rounded-lg border border-red-200 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 dark:border-red-900 dark:text-red-300 dark:hover:bg-red-950/40"
-                >
-                  Hapus
-                </button>
-              </div>
-              <p className="mt-3 whitespace-pre-wrap text-sm text-slate-700 dark:text-slate-300">{item.pesan}</p>
             </article>
           ))}
         </div>
