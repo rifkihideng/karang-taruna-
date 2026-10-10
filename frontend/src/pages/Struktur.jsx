@@ -57,10 +57,11 @@ export default function Struktur() {
   const inti = list.filter((a) =>
     ['Ketua', 'Wakil Ketua', 'Sekretaris', 'Bendahara'].includes(a.jabatan)
   );
-  const bidangOrder = ['PDD', 'Humas', 'Rohani', 'Olahraga', 'Anggota'];
+  const bidangOrder = ['PDD', 'Humas', 'Rohani', 'Olahraga'];
   const bidang = bidangOrder
     .map((nama) => ({ nama, anggota: list.filter((a) => a.jabatan === nama) }))
     .filter((b) => b.anggota.length > 0);
+  const anggota = list.filter((a) => a.jabatan === 'Anggota');
 
   const toggle = (nama) => setOpen((prev) => ({ ...prev, [nama]: !prev[nama] }));
 
@@ -116,6 +117,20 @@ export default function Struktur() {
               ))}
             </div>
           </section>
+
+          {/* Anggota */}
+          {anggota.length > 0 && (
+            <section>
+              <h2 className="mb-3 text-lg font-bold text-gray-900 dark:text-white">Anggota</h2>
+              <ul className="space-y-1.5 rounded-xl bg-white px-4 py-3 shadow-sm ring-1 ring-gray-100 dark:bg-slate-800 dark:ring-slate-700">
+                {anggota.map((p) => (
+                  <li key={p.id} className="text-sm text-gray-700 dark:text-slate-300">
+                    {p.nama}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
         </div>
       )}
     </div>
