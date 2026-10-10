@@ -122,10 +122,18 @@ export default function Struktur() {
           {anggota.length > 0 && (
             <section>
               <h2 className="mb-3 text-lg font-bold text-gray-900 dark:text-white">Anggota</h2>
-              <ul className="space-y-1.5 rounded-xl bg-white px-4 py-3 shadow-sm ring-1 ring-gray-100 dark:bg-slate-800 dark:ring-slate-700">
+              <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {anggota.map((p) => (
-                  <li key={p.id} className="text-sm text-gray-700 dark:text-slate-300">
-                    {p.nama}
+                  <li
+                    key={p.id}
+                    className="flex items-center gap-3 rounded-xl bg-white px-4 py-2.5 shadow-sm ring-1 ring-gray-100 dark:bg-slate-800 dark:ring-slate-700"
+                  >
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">
+                      <User size={16} />
+                    </span>
+                    <span className="truncate text-sm font-medium text-gray-900 dark:text-white">
+                      {p.nama}
+                    </span>
                   </li>
                 ))}
               </ul>
