@@ -118,6 +118,21 @@ router.get('/admin/statistik', requireAdmin, async (req, res, next) => {
   }
 });
 
+// Daftar anggota yang dihapus (soft delete) — admin only.
+router.get('/admin/terhapus', requireAdmin, async (req, res, next) => {
+  try {
+    const { rows } = await db.execute(
+      `SELECT id, nama, alamat, kontak, minat, status, deleted_at
+       FROM anggota
+       WHERE deleted_at IS NOT NULL
+       ORDER BY deleted_at DESC, id DESC`
+    );
+    res.json({ data: rows });
+  } catch (err) {
+    next(err);
+  }
+});
+
 const validateAnggota = [
   body('nama')
     .isString()
@@ -215,6 +230,27 @@ router.post('/', formLimiter, validateAnggota, async (req, res, next) => {
     const { rows } = await db.execute('SELECT * FROM anggota WHERE id = ?', [id]);
 
     res.status(201).json({ data: rows[0], message: 'Pendaftaran berhasil diterima' });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/anggota/:id/restore — pulihkan anggota yang dihapus (admin only).
+router.post('/:id/restore', requireAdmin, async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id < 1) {
+      return res.status(400).json({ error: 'ID anggota tidak valid' });
+    }
+    const result = await db.execute(
+      'UPDATE anggota SET deleted_at = NULL WHERE id = ? AND deleted_at IS NOT NULL',
+      [id]
+    );
+    if (Number(result.rowsAffected) === 0) {
+      return res.status(404).json({ error: 'Anggota yang dihapus tidak ditemukan' });
+    }
+    const { rows } = await db.execute('SELECT * FROM anggota WHERE id = ?', [id]);
+    res.json({ data: rows[0], message: 'Anggota berhasil dipulihkan' });
   } catch (err) {
     next(err);
   }

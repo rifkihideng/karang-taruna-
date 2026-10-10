@@ -84,6 +84,7 @@ export default function Admin() {
   const [kegiatan, setKegiatan] = useState([]);
   const [berita, setBerita] = useState([]);
   const [pendaftar, setPendaftar] = useState([]);
+  const [terhapus, setTerhapus] = useState([]);
   const [rekap, setRekap] = useState(null);
   const [statistik, setStatistik] = useState(null);
   const [newPendaftarCount, setNewPendaftarCount] = useState(0);
@@ -106,6 +107,7 @@ export default function Admin() {
       fetchData('/anggota/admin/pendaftar'),
       fetchData('/anggota/admin/rekap'),
       fetchData('/anggota/admin/statistik'),
+      fetchData('/anggota/admin/terhapus'),
     ]);
 
     // Jika ada endpoint yang gagal karena sesi berakhir (401), lemparkan agar
@@ -126,16 +128,18 @@ export default function Admin() {
       pendaftarData: unwrap(settled[3], []),
       rekapData: unwrap(settled[4], null),
       statistikData: unwrap(settled[5], null),
+      terhapusData: unwrap(settled[6], []),
     };
   }, []);
 
-  const applyDashboardData = useCallback(({ statsData, kegiatanData, beritaData, pendaftarData, rekapData, statistikData }) => {
+  const applyDashboardData = useCallback(({ statsData, kegiatanData, beritaData, pendaftarData, rekapData, statistikData, terhapusData }) => {
     setStats(statsData);
     setKegiatan(kegiatanData);
     setBerita(beritaData);
     setPendaftar(pendaftarData);
     setRekap(rekapData);
     setStatistik(statistikData);
+    setTerhapus(terhapusData);
 
     const seenRaw = localStorage.getItem('pendaftarLastSeen');
     const seen = seenRaw ? Number(seenRaw) : null;
@@ -192,6 +196,7 @@ export default function Admin() {
     setKegiatan([]);
     setBerita([]);
     setPendaftar([]);
+    setTerhapus([]);
     setRekap(null);
     setStatistik(null);
     setAgendaForm(emptyAgenda);
@@ -347,6 +352,20 @@ export default function Admin() {
       setNotice('Pendaftar berhasil dihapus.');
     } catch (err) {
       setError(err.message || 'Gagal menghapus pendaftar');
+      return;
+    }
+    await reloadDashboard();
+  }
+
+  async function restoreAnggota(item) {
+    setError('');
+    setNotice('');
+    try {
+      await postData(`/anggota/${item.id}/restore`, {});
+      setTerhapus((items) => items.filter((anggota) => anggota.id !== item.id));
+      setNotice(`Pendaftar "${item.nama}" berhasil dipulihkan.`);
+    } catch (err) {
+      setError(err.message || 'Gagal memulihkan anggota');
       return;
     }
     await reloadDashboard();
@@ -1058,6 +1077,45 @@ export default function Admin() {
           </>
         )}
       </section>
+
+      {terhapus.length > 0 && (
+        <section className={`${tab === 'anggota' ? '' : 'hidden'} mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800 sm:p-6`}>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white">Anggota yang dihapus</h2>
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                Anggota yang dihapus masih bisa dipulihkan.
+              </p>
+            </div>
+            <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-700 dark:bg-slate-700/60 dark:text-slate-300">
+              {terhapus.length} terhapus
+            </span>
+          </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            {terhapus.map((anggota) => (
+              <article key={anggota.id} className="rounded-xl border border-slate-200 p-4 dark:border-slate-700">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h3 className="font-semibold text-slate-900 dark:text-white">{anggota.nama}</h3>
+                    <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                      Dihapus: {formatDate(anggota.deleted_at)}
+                    </p>
+                    {anggota.kontak && <p className="text-sm text-slate-600 dark:text-slate-300">Kontak: {anggota.kontak}</p>}
+                    {anggota.alamat && <p className="text-sm text-slate-600 dark:text-slate-300">Alamat: {anggota.alamat}</p>}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => restoreAnggota(anggota)}
+                    className="rounded-lg border border-emerald-300 px-3 py-1.5 text-sm font-medium text-emerald-700 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-300 dark:hover:bg-emerald-950/40"
+                  >
+                    Pulihkan
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
 
     </div>
   );
