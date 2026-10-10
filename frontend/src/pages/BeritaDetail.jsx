@@ -52,6 +52,13 @@ export default function BeritaDetail() {
       <p className="mt-2 text-sm text-gray-400 dark:text-slate-500">
         {formatTanggal(data.tanggal)}
       </p>
+      {data.gambar && (
+        <img
+          src={data.gambar}
+          alt={data.judul}
+          className="mt-6 h-72 w-full rounded-2xl object-cover"
+        />
+      )}
       <p className="mt-6 text-lg leading-relaxed text-gray-600 dark:text-slate-300">
         {data.isi}
       </p>

@@ -88,7 +88,7 @@ export default function Admin() {
   const [tab, setTab] = useState('dashboard');
 
   const loadData = useCallback(async () => {
-    const [statsData, kegiatanData, beritaData, pendaftarData, rekapData, statistikData] = await Promise.all([
+    const settled = await Promise.allSettled([
       fetchData('/stats'),
       fetchData('/kegiatan'),
       fetchData('/berita'),
@@ -96,7 +96,26 @@ export default function Admin() {
       fetchData('/anggota/admin/rekap'),
       fetchData('/anggota/admin/statistik'),
     ]);
-    return { statsData, kegiatanData, beritaData, pendaftarData, rekapData, statistikData };
+
+    // Jika ada endpoint yang gagal karena sesi berakhir (401), lemparkan agar
+    // reportLoadError menangani logout. Selain itu, satu endpoint gagal tidak
+    // boleh membuat seluruh dashboard ikut gagal.
+    const expired = settled.find(
+      (r) => r.status === 'rejected' && r.reason?.status === 401
+    );
+    if (expired) throw expired.reason;
+
+    const unwrap = (result, fallback) =>
+      result.status === 'fulfilled' ? result.value : fallback;
+
+    return {
+      statsData: unwrap(settled[0], null),
+      kegiatanData: unwrap(settled[1], []),
+      beritaData: unwrap(settled[2], []),
+      pendaftarData: unwrap(settled[3], []),
+      rekapData: unwrap(settled[4], null),
+      statistikData: unwrap(settled[5], null),
+    };
   }, []);
 
   const applyDashboardData = useCallback(({ statsData, kegiatanData, beritaData, pendaftarData, rekapData, statistikData }) => {
@@ -199,6 +218,20 @@ export default function Admin() {
     setNotice('');
   }
 
+  // Muat ulang data setelah aksi simpan/hapus. Kegagalan muat ulang tidak boleh
+  // menimpa status "berhasil disimpan" dengan pesan error yang menyesatkan.
+  async function reloadDashboard() {
+    try {
+      applyDashboardData(await loadData());
+    } catch (err) {
+      if (err.status === 401) {
+        reportLoadError(err);
+      } else {
+        setNotice('Perubahan berhasil disimpan, tetapi memuat ulang data gagal.');
+      }
+    }
+  }
+
   async function saveAgenda(event) {
     event.preventDefault();
     setSavingAgenda(true);
@@ -213,12 +246,13 @@ export default function Admin() {
         setNotice('Agenda berhasil ditambahkan.');
       }
       resetAgendaForm();
-      applyDashboardData(await loadData());
     } catch (err) {
       setError(err.message || 'Gagal menyimpan agenda');
-    } finally {
       setSavingAgenda(false);
+      return;
     }
+    await reloadDashboard();
+    setSavingAgenda(false);
   }
 
   async function saveBerita(event) {
@@ -238,12 +272,13 @@ export default function Admin() {
       setBeritaForm(emptyBerita);
       setGambarFile(null);
       setNotice('Berita berhasil ditambahkan.');
-      applyDashboardData(await loadData());
     } catch (err) {
       setError(err.message || 'Gagal menambahkan berita');
-    } finally {
       setSavingBerita(false);
+      return;
     }
+    await reloadDashboard();
+    setSavingBerita(false);
   }
 
   async function removeAgenda(item) {
@@ -267,10 +302,11 @@ export default function Admin() {
       await deleteData(`/anggota/${item.id}`);
       setPendaftar((items) => items.filter((anggota) => anggota.id !== item.id));
       setNotice('Pendaftar berhasil dihapus.');
-      applyDashboardData(await loadData());
     } catch (err) {
       setError(err.message || 'Gagal menghapus pendaftar');
+      return;
     }
+    await reloadDashboard();
   }
 
   async function removeBerita(item) {

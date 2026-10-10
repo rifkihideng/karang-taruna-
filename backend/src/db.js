@@ -33,7 +33,47 @@ function createLocalClient() {
   return createClient({ url: `file:${localDbPath()}` });
 }
 
-export let db = hasRemoteTursoConfig ? createRemoteClient() : createLocalClient();
+// Client aktif: mulai dari Turso (jika dikonfigurasi) atau SQLite lokal.
+let activeClient = hasRemoteTursoConfig ? createRemoteClient() : createLocalClient();
+let remoteDown = !hasRemoteTursoConfig;
+
+function isConnectionError(err) {
+  const msg = String(err?.message || err || '').toLowerCase();
+  return [
+    'fetch failed',
+    'econnrefused',
+    'econnreset',
+    'enotfound',
+    'getaddrinfo',
+    'network',
+    'socket',
+    'connection',
+    'timeout',
+    'unreachable',
+    'etimedout',
+  ].some((keyword) => msg.includes(keyword));
+}
+
+// Jalankan query dengan fallback runtime: jika koneksi Turso putus di tengah
+// jalan, otomatis pindah ke SQLite lokal supaya website tetap berjalan.
+async function executeWithFallback(sql, args) {
+  try {
+    return await activeClient.execute(sql, args);
+  } catch (err) {
+    if (hasRemoteTursoConfig && !remoteDown && isConnectionError(err)) {
+      console.warn(`⚠️ Turso terputus saat query (${err.message || err}). Beralih ke SQLite lokal.`);
+      remoteDown = true;
+      activeClient = createLocalClient();
+      await ensureLocalSchema();
+      return await activeClient.execute(sql, args);
+    }
+    throw err;
+  }
+}
+
+export const db = {
+  execute: executeWithFallback,
+};
 
 const DDL = [
   `CREATE TABLE IF NOT EXISTS berita (
@@ -84,6 +124,21 @@ const DDL = [
     created_at TEXT DEFAULT (datetime('now'))
   )`,
 ];
+
+// Pastikan skema tabel tersedia di SQLite lokal saat fallback runtime terjadi,
+// supaya query tidak gagal dengan "no such table".
+async function ensureLocalSchema() {
+  for (const statement of DDL) {
+    await activeClient.execute(statement);
+  }
+  const { rows: anggotaColumns } = await activeClient.execute('PRAGMA table_info(anggota)');
+  if (!anggotaColumns.some((column) => column.name === 'created_at')) {
+    await activeClient.execute('ALTER TABLE anggota ADD COLUMN created_at TEXT');
+  }
+  if (!anggotaColumns.some((column) => column.name === 'deleted_at')) {
+    await activeClient.execute('ALTER TABLE anggota ADD COLUMN deleted_at TEXT');
+  }
+}
 
 const SEED = [
   {
@@ -144,15 +199,14 @@ async function seedIfEmpty() {
 }
 
 export async function initDb() {
-  // Jika Turso remote tidak terjangkau saat server mulai, otomatis beralih
-  // ke database SQLite lokal supaya website tetap bisa berjalan.
+  // Uji koneksi awal. Jika Turso tidak terjangkau, fallback otomatis ke SQLite
+  // lokal (baik saat startup maupun saat koneksi putus di tengah jalan).
   if (hasRemoteTursoConfig) {
-    try {
-      await db.execute('SELECT 1');
+    await db.execute('SELECT 1');
+    if (remoteDown) {
+      console.warn('⚠️ Turso tidak terjangkau. Menggunakan SQLite lokal.');
+    } else {
       console.log('✅ Terhubung ke database Turso');
-    } catch (err) {
-      console.warn(`⚠️ Turso tidak terjangkau (${err.message || err}). Menggunakan SQLite lokal.`);
-      db = createLocalClient();
     }
   }
 
