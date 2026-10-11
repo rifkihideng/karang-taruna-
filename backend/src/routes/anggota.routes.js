@@ -256,6 +256,26 @@ router.post('/:id/restore', requireAdmin, async (req, res, next) => {
   }
 });
 
+// DELETE /api/anggota/:id/permanent — hapus permanen anggota yang sudah soft-deleted (admin only).
+router.delete('/:id/permanent', requireAdmin, async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id < 1) {
+      return res.status(400).json({ error: 'ID anggota tidak valid' });
+    }
+    const result = await db.execute(
+      'DELETE FROM anggota WHERE id = ? AND deleted_at IS NOT NULL',
+      [id]
+    );
+    if (Number(result.rowsAffected) === 0) {
+      return res.status(404).json({ error: 'Anggota terhapus tidak ditemukan' });
+    }
+    res.json({ message: 'Anggota dihapus secara permanen' });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // DELETE /api/anggota/:id — hapus anggota (admin only, soft delete).
 router.delete('/:id', requireAdmin, async (req, res, next) => {
   try {

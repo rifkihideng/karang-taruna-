@@ -371,6 +371,28 @@ export default function Admin() {
     await reloadDashboard();
   }
 
+  async function removeAnggotaPermanen(item) {
+    if (
+      !window.confirm(
+        `Hapus permanen "${item.nama}"?\n\nData ini akan hilang selamanya dan tidak bisa dipulihkan.`
+      )
+    ) {
+      return;
+    }
+    if (!window.confirm('Yakin? Tindakan ini tidak dapat dibatalkan.')) return;
+    setError('');
+    setNotice('');
+    try {
+      await deleteData(`/anggota/${item.id}/permanent`);
+      setTerhapus((items) => items.filter((anggota) => anggota.id !== item.id));
+      setNotice(`Pendaftar "${item.nama}" dihapus permanen.`);
+    } catch (err) {
+      setError(err.message || 'Gagal menghapus permanen anggota');
+      return;
+    }
+    await reloadDashboard();
+  }
+
   async function removeBerita(item) {
     if (!window.confirm(`Hapus berita "${item.judul}"?`)) return;
     setError('');
@@ -1103,13 +1125,22 @@ export default function Admin() {
                     {anggota.kontak && <p className="text-sm text-slate-600 dark:text-slate-300">Kontak: {anggota.kontak}</p>}
                     {anggota.alamat && <p className="text-sm text-slate-600 dark:text-slate-300">Alamat: {anggota.alamat}</p>}
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => restoreAnggota(anggota)}
-                    className="rounded-lg border border-emerald-300 px-3 py-1.5 text-sm font-medium text-emerald-700 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-300 dark:hover:bg-emerald-950/40"
-                  >
-                    Pulihkan
-                  </button>
+                  <div className="flex shrink-0 flex-col gap-2">
+                    <button
+                      type="button"
+                      onClick={() => restoreAnggota(anggota)}
+                      className="rounded-lg border border-emerald-300 px-3 py-1.5 text-sm font-medium text-emerald-700 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-300 dark:hover:bg-emerald-950/40"
+                    >
+                      Pulihkan
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => removeAnggotaPermanen(anggota)}
+                      className="rounded-lg border border-rose-300 px-3 py-1.5 text-sm font-medium text-rose-700 hover:bg-rose-50 dark:border-rose-700 dark:text-rose-300 dark:hover:bg-rose-950/40"
+                    >
+                      Hapus permanen
+                    </button>
+                  </div>
                 </div>
               </article>
             ))}
