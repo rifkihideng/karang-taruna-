@@ -113,10 +113,10 @@ export default function Struktur() {
   const pengurusInti = list.filter((a) =>
     ['Ketua', 'Wakil Ketua', 'Sekretaris', 'Bendahara'].includes(a.jabatan)
   );
-  const ketua = list.filter((a) => a.jabatan === 'Ketua')[0] || null;
-  const inti = list.filter((a) =>
-    ['Wakil Ketua', 'Sekretaris', 'Bendahara'].includes(a.jabatan)
-  );
+  const ketua = list.find((a) => a.jabatan === 'Ketua') || null;
+  const wakil = list.find((a) => a.jabatan === 'Wakil Ketua') || null;
+  const sekretaris = list.find((a) => a.jabatan === 'Sekretaris') || null;
+  const bendahara = list.find((a) => a.jabatan === 'Bendahara') || null;
   const bidangOrder = ['PDD', 'Humas', 'Rohani', 'Olahraga'];
   const bidang = bidangOrder
     .map((nama) => ({ nama, anggota: list.filter((a) => a.jabatan === nama) }))
@@ -200,45 +200,53 @@ export default function Struktur() {
             )}
           </div>
 
-          {/* Desktop: bagan organisasi */}
+          {/* Desktop: bagan organisasi klasik */}
           <div className="mt-12 hidden md:block">
-            {ketua && (
-              <div className="flex flex-col items-center">
-                <PersonCard p={ketua} />
-                {inti.length > 0 && (
-                  <div className="h-8 w-[2px] bg-gray-300 dark:bg-slate-600" />
-                )}
+            {/* Ketua di tengah, diapit Sekretaris (kiri) & Bendahara (kanan) */}
+            <div className="flex items-center justify-center">
+              <div className="flex w-52 shrink-0 flex-col items-center">
+                {sekretaris && <PersonCard p={sekretaris} />}
               </div>
+              <div className="mx-2 h-[2px] w-8 shrink-0 bg-gray-300 dark:bg-slate-600" />
+              <div className="flex w-52 shrink-0 flex-col items-center">
+                {ketua && <PersonCard p={ketua} />}
+              </div>
+              <div className="mx-2 h-[2px] w-8 shrink-0 bg-gray-300 dark:bg-slate-600" />
+              <div className="flex w-52 shrink-0 flex-col items-center">
+                {bendahara && <PersonCard p={bendahara} />}
+              </div>
+            </div>
+
+            {/* Garis turun dari Ketua ke Wakil Ketua */}
+            {(wakil || bidang.length > 0 || anggota.length > 0) && (
+              <div className="mx-auto h-8 w-[2px] bg-gray-300 dark:bg-slate-600" />
             )}
 
-            {inti.length > 0 && (
-              <BranchRow
-                items={inti.map((p) => (
-                  <PersonCard key={p.id} p={p} />
-                ))}
-                widthClass="md:w-56"
-              />
-            )}
-
-            {(bidang.length > 0 || anggota.length > 0) && (
+            {/* Wakil Ketua di bawah Ketua */}
+            {wakil && (
               <>
-                {inti.length > 0 && (
-                  <div className="flex justify-center">
-                    <div className="h-8 w-[2px] bg-gray-300 dark:bg-slate-600" />
-                  </div>
+                <div className="flex justify-center">
+                  <PersonCard p={wakil} />
+                </div>
+                {(bidang.length > 0 || anggota.length > 0) && (
+                  <div className="mx-auto h-8 w-[2px] bg-gray-300 dark:bg-slate-600" />
                 )}
-                <BranchRow
-                  items={[
-                    ...bidang.map((b) => (
-                      <GrupBox key={b.nama} nama={b.nama} anggota={b.anggota} />
-                    )),
-                    ...(anggota.length > 0
-                      ? [<GrupBox key="Anggota" nama="Anggota" anggota={anggota} />]
-                      : []),
-                  ]}
-                  widthClass="md:w-52"
-                />
               </>
+            )}
+
+            {/* Divisi & anggota di baris bawah */}
+            {(bidang.length > 0 || anggota.length > 0) && (
+              <BranchRow
+                items={[
+                  ...bidang.map((b) => (
+                    <GrupBox key={b.nama} nama={b.nama} anggota={b.anggota} />
+                  )),
+                  ...(anggota.length > 0
+                    ? [<GrupBox key="Anggota" nama="Anggota" anggota={anggota} />]
+                    : []),
+                ]}
+                widthClass="md:w-52"
+              />
             )}
           </div>
         </>
