@@ -115,7 +115,7 @@ export default function Struktur() {
   );
   const ketua = list.find((a) => a.jabatan === 'Ketua') || null;
   const wakil = list.find((a) => a.jabatan === 'Wakil Ketua') || null;
-  const sekretaris = list.find((a) => a.jabatan === 'Sekretaris') || null;
+  const sekretaris = list.filter((a) => a.jabatan === 'Sekretaris');
   const bendahara = list.find((a) => a.jabatan === 'Bendahara') || null;
   const bidangOrder = ['PDD', 'Humas', 'Rohani', 'Olahraga'];
   const bidang = bidangOrder
@@ -204,8 +204,10 @@ export default function Struktur() {
           <div className="mt-12 hidden md:block">
             {/* Ketua di tengah, diapit Sekretaris (kiri) & Bendahara (kanan) */}
             <div className="flex items-center justify-center">
-              <div className="flex w-52 shrink-0 flex-col items-center">
-                {sekretaris && <PersonCard p={sekretaris} />}
+              <div className="flex w-52 shrink-0 flex-col items-center gap-2">
+                {sekretaris.map((p) => (
+                  <PersonCard key={p.id} p={p} />
+                ))}
               </div>
               <div className="mx-2 h-[2px] w-8 shrink-0 bg-gray-300 dark:bg-slate-600" />
               <div className="flex w-52 shrink-0 flex-col items-center">
