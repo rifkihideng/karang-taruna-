@@ -39,8 +39,9 @@ function DivisiGroup({ nama, anggota, open, onToggle }) {
       {open && (
         <ul className="space-y-2 border-t border-gray-100 px-4 py-3 dark:border-slate-700">
           {anggota.map((p) => (
-            <li key={p.id} className="text-sm text-gray-700 dark:text-slate-300">
-              {p.nama}
+            <li key={p.id} className="flex items-center gap-2 text-sm text-gray-700 dark:text-slate-300">
+              <User size={14} className="shrink-0 text-blue-500 dark:text-blue-400" />
+              <span>{p.nama}</span>
             </li>
           ))}
         </ul>
@@ -93,9 +94,10 @@ function GrupBox({ nama, anggota }) {
         {anggota.map((p) => (
           <div
             key={p.id}
-            className="rounded-lg bg-slate-50 px-2 py-1.5 text-sm font-medium text-gray-700 dark:bg-slate-900 dark:text-slate-300"
+            className="flex items-center justify-center gap-1.5 rounded-lg bg-slate-50 px-2 py-1.5 text-sm font-medium text-gray-700 dark:bg-slate-900 dark:text-slate-300"
           >
-            {p.nama}
+            <User size={14} className="shrink-0 text-blue-500 dark:text-blue-400" />
+            <span className="truncate">{p.nama}</span>
           </div>
         ))}
       </div>
