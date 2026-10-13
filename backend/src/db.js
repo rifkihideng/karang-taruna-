@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { randomBytes } from 'node:crypto';
 import { createClient } from '@libsql/client';
 import bcrypt from 'bcryptjs';
 import { berita, kegiatan, anggota, galeri } from './data/seed.js';
@@ -207,13 +208,24 @@ async function seedIfEmpty() {
   // Pastikan ada admin user — untuk development. Password di-hash dengan bcrypt.
   const { rows: adminCountRow } = await db.execute(`SELECT COUNT(*) AS c FROM admin_users`);
   if (Number(adminCountRow[0].c) === 0) {
-    const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
     const SALT_ROUNDS = Number(process.env.ADMIN_SALT_ROUNDS || 10);
     const PEPPER = process.env.ADMIN_PEPPER || '';
-    const passwordToHash = ADMIN_PASSWORD + PEPPER;
-    const hash = bcrypt.hashSync(passwordToHash, SALT_ROUNDS);
+
+    // Jangan pernah memakai password default. Gunakan ADMIN_PASSWORD dari
+    // environment; jika tidak di-set, buat password acak sekali pakai saat seed.
+    const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD?.trim();
+    const generatedPassword = ADMIN_PASSWORD || randomBytes(18).toString('base64url');
+
+    const hash = bcrypt.hashSync(generatedPassword + PEPPER, SALT_ROUNDS);
     await db.execute(`INSERT INTO admin_users (username, password_hash) VALUES (?, ?)`, ['admin', hash]);
-    console.log('Admin user seeded (username: admin)');
+
+    if (ADMIN_PASSWORD) {
+      console.log('Admin user seeded (username: admin)');
+    } else {
+      console.warn('⚠️ ADMIN_PASSWORD tidak di-set. Password admin acak dibuat sekali dan hanya ditampilkan di bawah ini:');
+      console.warn(generatedPassword);
+      console.warn('Simpan password ini sekarang. Untuk menggantinya, set ADMIN_PASSWORD lalu kosongkan tabel admin_users dan restart server.');
+    }
   }
 }
 

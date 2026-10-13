@@ -17,3 +17,13 @@ export const formLimiter = rateLimit({
   legacyHeaders: false,
   message: { error: 'Terlalu banyak pengiriman, coba lagi beberapa menit lagi' },
 });
+
+// Batasi percobaan login admin agar tidak bisa di-brute force.
+export const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 menit
+  limit: 5,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  skipSuccessfulRequests: true, // hanya hitung percobaan gagal (401)
+  message: { error: 'Terlalu banyak percobaan login, coba lagi beberapa menit lagi' },
+});

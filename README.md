@@ -130,7 +130,7 @@ deploy (gambar baru otomatis masuk Vercel Blob).
 
 Backend sekarang menambahkan tabel `admin_users` dan menyertakan satu akun admin saat pertama kali dijalankan (seed). Pengaturan terkait:
 
-- ADMIN_PASSWORD (default `admin123`) — password awal (digunakan hanya saat seed).
+- ADMIN_PASSWORD (tidak ada default) — password awal (digunakan hanya saat seed). Jika tidak di-set, backend membuat password acak sekali pakai dan menampilkannya di log.
 - ADMIN_SALT_ROUNDS (default `10`) — salt rounds untuk bcrypt.
 - ADMIN_PEPPER (opsional) — nilai 'pepper' yang akan ditambahkan ke password sebelum hashing; simpan hanya di environment.
 

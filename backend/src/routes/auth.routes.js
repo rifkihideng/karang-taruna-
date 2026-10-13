@@ -3,12 +3,13 @@ import jwt from 'jsonwebtoken';
 import { db } from '../db.js';
 import bcrypt from 'bcryptjs';
 import { getJwtSecret } from '../middleware/requireAdmin.js';
+import { loginLimiter } from '../middleware/rateLimit.js';
 
 const router = Router();
 
 // Login admin: ambil user dari tabel admin_users dan verifikasi hash bcrypt.
 // Mendukung optional PEPPER via ADMIN_PEPPER env var.
-router.post('/login', async (req, res) => {
+router.post('/login', loginLimiter, async (req, res) => {
   try {
     const { username = 'admin', password } = req.body || {};
     const jwtSecret = getJwtSecret();
