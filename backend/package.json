@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "build:obfuscate": "node scripts/obfuscate.mjs"
   },
   "dependencies": {
     "@libsql/client": "^0.18.0",
@@ -22,6 +23,8 @@
     "multer": "^2.4.0"
   },
   "devDependencies": {
+    "esbuild": "^0.28.2",
+    "javascript-obfuscator": "^5.9.0",
     "nodemon": "^3.1.0"
   }
 }

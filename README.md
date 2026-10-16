@@ -99,8 +99,11 @@ mendukung pagination via query `?limit=` dan `?offset=` (maks. 200 per halaman).
 
 Frontend dan backend di-deploy dalam **satu project Vercel**:
 
-- `vercel.json` di root mengatur build frontend (Vite) dan rewrite `/api/*` ke
-  serverless function `api/index.js` yang me-mount Express app.
+- `vercel.json` di root mengatur dua service: `web` (frontend Vite) dan `api`
+  (backend Express, entrypoint `backend/dist/vercel.js`). Saat deploy, service
+  `api` menjalankan `npm run build:obfuscate` untuk membundle + meng-obfuscate
+  backend; service `web` menjalankan `vite build` yang otomatis meng-obfuscate
+  bundle frontend melalui plugin di `vite.config.js`.
 - `package.json` di root berisi dependency backend agar bisa di-bundle oleh Vercel.
 - Upload gambar berita memakai **Vercel Blob** di produksi, dan folder lokal
   `backend/uploads/` di development.
@@ -155,6 +158,27 @@ Yang sudah diterapkan di backend:
 - **Query parameterized** — aman dari SQL injection.
 - **Error handler** — respons tanpa detail; log ringkas, stack trace hanya di development.
 - **X-Powered-By dimatikan** — versi Express tidak terekspos.
+
+### Obfuscation kode
+
+Kode yang dikirim/di-deploy disamarkan agar sulit dibaca/digunakan ulang:
+
+- **Frontend** — plugin obfuscation di [frontend/vite.config.js](frontend/vite.config.js)
+  meng-obfuscate setiap chunk JS saat `npm run build` (pakai
+  [javascript-obfuscator](https://github.com/javascript-obfuscator/javascript-obfuscator)).
+- **Backend** — `npm run build:obfuscate` di [backend](backend) membundle seluruh
+  kode backend menjadi satu file ESM dengan `esbuild`, lalu meng-obfuscate-nya ke
+  [backend/dist/vercel.js](backend/dist/vercel.js). File inilah yang dipakai
+  Vercel sebagai entrypoint API (lihat `vercel.json`).
+
+> **Penting:** obfuscation **bukan enkripsi**. Kode frontend yang dikirim ke
+> browser pada dasarnya tetap publik dan masih bisa dianalisis/di-deobfuscate
+> oleh orang yang berusaha. Obfuscation hanya mempersulit pembacaan, bukan
+> pengaman data. Rahasia (JWT secret, token Turso, dsb.) harus tetap hanya ada
+> di environment variable server — jangan pernah dimasukkan ke kode frontend.
+> Untuk mengubah opsi obfuscation, edit `obfuscationOptions` di
+> [frontend/vite.config.js](frontend/vite.config.js) atau
+> [backend/scripts/obfuscate.mjs](backend/scripts/obfuscate.mjs).
 
 > **Produksi (di belakang reverse proxy):** set `TRUST_PROXY=1` di `.env`
 > agar rate limiter membaca IP asli pengguna, bukan IP proxy.
