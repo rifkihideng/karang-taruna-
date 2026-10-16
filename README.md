@@ -171,6 +171,12 @@ Kode yang dikirim/di-deploy disamarkan agar sulit dibaca/digunakan ulang:
   [backend/dist/vercel.js](backend/dist/vercel.js). File inilah yang dipakai
   Vercel sebagai entrypoint API (lihat `vercel.json`).
 
+  `backend/dist/vercel.js` sengaja di-commit ke repository: Vercel memeriksa
+  keberadaan file entrypoint **sebelum** menjalankan build, jadi file itu harus
+  ada di repo. Saat deploy, service `api` tetap menjalankan
+  `npm run build:obfuscate` untuk me-regenerate file tersebut dari kode sumber
+  terbaru.
+
 > **Penting:** obfuscation **bukan enkripsi**. Kode frontend yang dikirim ke
 > browser pada dasarnya tetap publik dan masih bisa dianalisis/di-deobfuscate
 > oleh orang yang berusaha. Obfuscation hanya mempersulit pembacaan, bukan
