@@ -33,14 +33,59 @@ const upload = multer({
   },
 });
 
+// Validasi magic bytes file (bukan hanya mimetype dari klien) agar konten
+// non-gambar tidak bisa diselundupkan sebagai gambar.
+function hasAllowedImageSignature(buffer) {
+  if (!buffer || buffer.length < 12) return false;
+
+  // JPEG: FF D8 FF
+  if (buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) return true;
+
+  // PNG: 89 50 4E 47 0D 0A 1A 0A
+  if (
+    buffer[0] === 0x89 &&
+    buffer[1] === 0x50 &&
+    buffer[2] === 0x4e &&
+    buffer[3] === 0x47 &&
+    buffer[4] === 0x0d &&
+    buffer[5] === 0x0a &&
+    buffer[6] === 0x1a &&
+    buffer[7] === 0x0a
+  ) {
+    return true;
+  }
+
+  // GIF: GIF87a / GIF89a
+  const gif = buffer.toString('ascii', 0, 6);
+  if (gif === 'GIF87a' || gif === 'GIF89a') return true;
+
+  // WEBP: RIFF....WEBP
+  if (buffer.toString('ascii', 0, 4) === 'RIFF' && buffer.toString('ascii', 8, 12) === 'WEBP') {
+    return true;
+  }
+
+  // AVIF: ftyp dengan brand avif/avis
+  if (buffer.toString('ascii', 4, 8) === 'ftyp') {
+    const brand = buffer.toString('ascii', 8, 12);
+    if (brand === 'avif' || brand === 'avis') return true;
+  }
+
+  return false;
+}
+
 function uploadGambar(req, res, next) {
   upload.single('gambar')(req, res, (err) => {
-    if (!err) return next();
-    const message =
-      err.code === 'LIMIT_FILE_SIZE'
-        ? 'Ukuran gambar maksimal 5 MB'
-        : err.message || 'Gagal mengunggah gambar';
-    res.status(400).json({ error: message });
+    if (err) {
+      const message =
+        err.code === 'LIMIT_FILE_SIZE'
+          ? 'Ukuran gambar maksimal 5 MB'
+          : err.message || 'Gagal mengunggah gambar';
+      return res.status(400).json({ error: message });
+    }
+    if (req.file && !hasAllowedImageSignature(req.file.buffer)) {
+      return res.status(400).json({ error: 'Konten file bukan gambar yang valid' });
+    }
+    next();
   });
 }
 

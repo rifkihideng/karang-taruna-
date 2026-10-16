@@ -7,6 +7,14 @@ import { loginLimiter } from '../middleware/rateLimit.js';
 
 const router = Router();
 
+// Hash dummy dengan biaya bcrypt yang sama (default 10 salt rounds) agar waktu
+// respons login konsisten, sehingga keberadaan username tidak bisa dibedakan
+// lewat timing attack (early return vs bcrypt.compare).
+const DUMMY_HASH = bcrypt.hashSync(
+  'dummy-password-for-timing-equalization',
+  Number(process.env.ADMIN_SALT_ROUNDS || 10)
+);
+
 // Login admin: ambil user dari tabel admin_users dan verifikasi hash bcrypt.
 // Mendukung optional PEPPER via ADMIN_PEPPER env var.
 router.post('/login', loginLimiter, async (req, res) => {
@@ -27,12 +35,12 @@ router.post('/login', loginLimiter, async (req, res) => {
 
     const { rows } = await db.execute('SELECT * FROM admin_users WHERE username = ? LIMIT 1', [username]);
     const user = rows[0];
-    if (!user) {
-      return res.status(401).json({ error: 'Kredensial salah' });
-    }
 
-    const ok = await bcrypt.compare(password + PEPPER, user.password_hash);
-    if (!ok) {
+    // Selalu jalankan bcrypt.compare (dengan hash dummy bila user tidak ada)
+    // agar durasi respons sama untuk semua kasus kegagalan.
+    const hash = user ? user.password_hash : DUMMY_HASH;
+    const ok = await bcrypt.compare(password + PEPPER, hash);
+    if (!user || !ok) {
       return res.status(401).json({ error: 'Kredensial salah' });
     }
 

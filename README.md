@@ -159,6 +159,34 @@ Yang sudah diterapkan di backend:
 > **Produksi (di belakang reverse proxy):** set `TRUST_PROXY=1` di `.env`
 > agar rate limiter membaca IP asli pengguna, bukan IP proxy.
 
+## Rotasi Rahasia Production (wajib setelah rahasia terlanjur tersimpan di mesin development)
+
+Jika `.env` lokal pernah berisi rahasia yang **sama** dengan production (JWT secret,
+password admin, token Turso), file itu menjadi kunci penuh ke production. Lakukan
+rotasi berikut agar nilai yang lama tidak berlaku lagi:
+
+1. **`JWT_SECRET`** — generate nilai acak baru, set di dashboard Vercel
+   (Project → Settings → Environment Variables → Production). Ini langsung
+   membatalkan semua token admin lama.
+2. **`ADMIN_PASSWORD` & `ADMIN_PEPPER`** — generate nilai acak baru dan set di
+   Vercel. Karena hash lama tetap tersimpan di `admin_users`, hapus dulu baris
+   admin lalu redeploy agar seed membuat hash baru:
+
+   ```sql
+   -- via Turso CLI (turso db shell ...) atau Turso Dashboard
+   DELETE FROM admin_users WHERE username = 'admin';
+   ```
+
+   Setelah redeploy, `seedIfEmpty()` akan membuat ulang akun admin dengan
+   password + pepper yang baru.
+3. **`TURSO_AUTH_TOKEN`** — di dashboard Turso, regenerate token database dan
+   perbarui nilainya di Vercel. Token lama otomatis tidak berlaku.
+4. **`.env` lokal** — pastikan memakai nilai **berbeda** dan biarkan `TURSO_*`
+   kosong agar development memakai SQLite lokal, bukan database production.
+
+> Mengubah nilai environment saja **tidak** mengubah hash admin yang sudah
+> tersimpan; hash baru hanya dibuat saat tabel `admin_users` kosong (seed).
+
 ## Catatan Keamanan
 
 Hasil `npm audit --omit=dev` di backend menunjukkan **0 kerentanan** pada dependency
